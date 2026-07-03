@@ -1,0 +1,191 @@
+{
+    "date": "2026-07-03",
+    "title": "AI Daily Report",
+    "summary": "Today we found 10 AI signals. The most important signal is: parse_error",
+    "items": [
+        {
+            "source": "github",
+            "title": "JuliusBrussee/caveman",
+            "description": "🪨 why use many token when few token do trick — Claude Code skill that cuts 65% of tokens by talking like caveman",
+            "url": "https://github.com/JuliusBrussee/caveman",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "github",
+            "title": "santifer/career-ops",
+            "description": "AI-powered job search system built on Claude Code. 14 skill modes, Go dashboard, PDF generation, batch processing.",
+            "url": "https://github.com/santifer/career-ops",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "github",
+            "title": "affaan-m/ECC",
+            "description": "The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.",
+            "url": "https://github.com/affaan-m/ECC",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "github",
+            "title": "openai/codex-plugin-cc",
+            "description": "Use Codex from Claude Code to review code or delegate tasks.",
+            "url": "https://github.com/openai/codex-plugin-cc",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "github",
+            "title": "ryanmcdermott/clean-code-javascript",
+            "description": "Clean Code concepts adapted for JavaScript",
+            "url": "https://github.com/ryanmcdermott/clean-code-javascript",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "OpenAI",
+            "title": "Company",
+            "description": "Company",
+            "url": "https://openai.com/news/company-announcements/",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "OpenAI",
+            "title": "Research",
+            "description": "Research",
+            "url": "https://openai.com/news/research/",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "OpenAI",
+            "title": "Product",
+            "description": "Product",
+            "url": "https://openai.com/news/product-releases/",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "OpenAI",
+            "title": "Safety",
+            "description": "Safety",
+            "url": "https://openai.com/news/safety-alignment/",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        },
+        {
+            "source": "OpenAI",
+            "title": "Engineering",
+            "description": "Engineering",
+            "url": "https://openai.com/news/engineering/",
+            "author": null,
+            "published_at": null,
+            "tags": null
+        }
+    ],
+    "signals": [
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"response\": {}\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "github",
+            "title": "JuliusBrussee/caveman",
+            "url": "https://github.com/JuliusBrussee/caveman"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"response\": {}\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "github",
+            "title": "santifer/career-ops",
+            "url": "https://github.com/santifer/career-ops"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"response\": {}\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "github",
+            "title": "affaan-m/ECC",
+            "url": "https://github.com/affaan-m/ECC"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"response\": {}\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "github",
+            "title": "openai/codex-plugin-cc",
+            "url": "https://github.com/openai/codex-plugin-cc"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"current_time\": \"2025-04-08T00:00:00Z\",\n  \"analysis\": {\n    \"market_overview\": {\n      \"global_ai_market_size_2025\": \"预计约5000亿美元\",\n      \"growth_rate\": \"年复合增长率约20%\",\n      \"key_drivers\": [\"生成式AI商业化\", \"边缘计算普及\", \"AI芯片性能提升\"]\n    },\n    \"segments\": {\n      \"generative_ai\": {\n        \"market_share\": \"约30%\",\n        \"leading_players\": [\"OpenAI\", \"Google DeepMind\", \"Anthropic\"],\n        \"trends\": [\"多模态模型\", \"实时生成\", \"企业级应用\"]\n      },\n      \"ai_infrastructure\": {\n        \"market_share\": \"约25%\",\n        \"leading_players\": [\"NVIDIA\", \"AMD\", \"Intel\"],\n        \"trends\": [\"专用AI芯片\", \"云AI服务\", \"边缘AI硬件\"]\n      },\n      \"ai_software\": {\n        \"market_share\": \"约20%\",\n        \"leading_players\": [\"Microsoft\", \"Salesforce\", \"Palantir\"],\n        \"trends\": [\"AI驱动的SaaS\", \"自动化工具\", \"数据分析平台\"]\n      }\n    },\n    \"regional_analysis\": {\n      \"north_america\": \"主导地位，占全球市场约45%\",\n      \"asia_pacific\": \"快速增长，中国和印度为主要驱动力\",\n      \"europe\": \"监管严格，但AI研发投入持续增加\"\n    },\n    \"challenges\": {\n      \"regulation\": \"全球AI监管框架不统一\",\n      \"ethics\": \"偏见、隐私和就业影响\",\n      \"technical\": \"模型可解释性、能耗和安全性\"\n    },\n    \"opportunities\": {\n      \"healthcare\": \"AI诊断和药物发现\",\n      \"autonomous_vehicles\": \"L4/L5自动驾驶\",\n      \"education\": \"个性化学习系统\"\n    },\n    \"forecast_2026\": {\n      \"market_size\": \"预计约6000亿美元\",\n      \"key_trends\": [\"AI Agent普及\", \"开源模型生态成熟\", \"AI与IoT深度融合\"]\n    }\n  }\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "github",
+            "title": "ryanmcdermott/clean-code-javascript",
+            "url": "https://github.com/ryanmcdermott/clean-code-javascript"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"response\": {}\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "OpenAI",
+            "title": "Company",
+            "url": "https://openai.com/news/company-announcements/"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"response\": {}\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "OpenAI",
+            "title": "Research",
+            "url": "https://openai.com/news/research/"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"constraints\": [\"不输出任何非JSON内容\"]\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "OpenAI",
+            "title": "Product",
+            "url": "https://openai.com/news/product-releases/"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"response\": {}\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "OpenAI",
+            "title": "Safety",
+            "url": "https://openai.com/news/safety-alignment/"
+        },
+        {
+            "signal": "parse_error",
+            "insight": "{\n  \"role\": \"专业AI行业分析师\",\n  \"output_format\": \"JSON only\",\n  \"constraints\": [\"不要输出JSON以外的内容\"]\n}",
+            "category": "Unknown",
+            "impact": 0,
+            "source": "OpenAI",
+            "title": "Engineering",
+            "url": "https://openai.com/news/engineering/"
+        }
+    ],
+    "github_projects": [],
+    "generated_at": "2026-07-03 16:27:47"
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Daily Report</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            background: #f5f7fb;
+            padding: 40px;
+        }
+
+        .header{
+            background: #111;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .card{
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,.08);
+        }
+
+        .signal{
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .insight{
+            margin: 10px 0;
+        }
+
+        .tag{
+            display: inline-block;
+            background: #e8ecff;
+            color: #3355ff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .meta{
+            margin-top: 10px;
+            color: gray;
+        }
+
+        a{
+            color: #3366ff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>🚀 AI Daily Report</h1>
+    <p>{{ summary }}</p>
+</div>
+
+{% for s in signals %}
+
+<div class="card">
+    <div class="signal">🔥 {{ s.signal }}</div>
+
+    <div class="insight">💡 {{ s.insight }}</div>
+
+    <div class="meta">
+        <span class="tag">{{ s.category }}</span>
+        ⭐ {{ s.impact }}
+        <br><br>
+        <a href="{{ s.url }}" target="_blank">查看原文 →</a>
+    </div>
+</div>
+
+{% endfor %}
+
+</body>
+</html>
