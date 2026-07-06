@@ -1,84 +1,299 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>AI Daily Report</title>
-
-    <style>
-        body{
-            font-family: Arial;
-            background: #f5f7fb;
-            padding: 40px;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI双周产品周报</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            paperBg: '#f7f3e8',
+            inkDark: '#111111',
+            inkMid: '#333333',
+            inkLight: '#555555',
+            sealRed: '#a62c2c',
+            bambooGreen: '#506d4e',
+            oldCyan: '#365772',
+            bronzeGold: '#b8945c',
+          },
+          fontFamily: {
+            song: ['"Noto Serif SC"', 'serif'],
+          },
+          animation: {
+            slideBase: 'paperSlideUp 0.55s ease-out forwards',
+            dotBreathe: 'dotBreathe 2.4s ease-in-out infinite',
+            softFloat: 'softFloat 5s ease-in-out infinite',
+            pressPaper: 'pressPaper 0.18s ease-out',
+          },
+          keyframes: {
+            paperSlideUp: {
+              from: { opacity: '0', transform: 'translateY(22px)' },
+              to: { opacity: '1', transform: 'translateY(0)' }
+            },
+            dotBreathe: {
+              '0%,100%': { boxShadow: '0 0 4px #a62c2c' },
+              '50%': { boxShadow: '0 0 10px #a62c2c, 0 0 18px #a62c2c40' }
+            },
+            softFloat: {
+              '0%,100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-5px)' }
+            },
+            pressPaper: {
+              '0%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(0.97)' },
+              '100%': { transform: 'scale(1)' }
+            }
+          }
         }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto { content-visibility: auto; }
+      .paper-texture {
+        background-image:
+          radial-gradient(circle at 12% 15%, rgba(17, 17, 17, 0.025) 0%, transparent 55%),
+          radial-gradient(circle at 88% 25%, rgba(166, 44, 44, 0.03) 0%, transparent 50%),
+          linear-gradient(180deg, #f7f3e8 0%, #efe9dd 100%);
+      }
+      .grain-filter::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        pointer-events: none;
+      }
+      .wood-border {
+        border: 2px solid #111111;
+        box-shadow: 5px 5px 0 #111111;
+        border-radius: 0.4rem;
+      }
+      .wood-border-sm {
+        border: 1px solid #111111;
+        box-shadow: 2px 2px 0 #111111;
+        border-radius: 0.3rem;
+      }
+      .timeline-axis {
+        position: absolute;
+        left: 18px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: repeating-linear-gradient(180deg, #111111, #111111 8px, transparent 8px, transparent 16px);
+      }
+      .timeline-dot {
+        position: absolute;
+        left: 12px;
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background: #a62c2c;
+        border: 2px solid #f7f3e8;
+        animation: dotBreathe 2.4s infinite;
+      }
+      .card-paper-hover {
+        transition: all 0.3s ease;
+      }
+      .card-paper-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 7px 7px 0 #111111, 0 0 12px rgba(166, 44, 44, 0.12);
+      }
+      .card-paper-hover:active {
+        animation: pressPaper 0.18s;
+      }
+      .article-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #111111;
+        transition: color 0.28s ease, transform 0.28s ease;
+      }
+      .card-paper-hover:hover .article-title {
+        color: #a62c2c;
+        transform: translateX(3px);
+      }
+      .tag-label {
+        transition: transform 0.24s ease;
+      }
+      .card-paper-hover:hover .tag-label {
+        transform: scale(1.04);
+      }
+      .btn-paper {
+        transition: all 0.2s ease;
+      }
+      .btn-paper:hover {
+        transform: translateY(-1px);
+      }
+      .btn-paper:active {
+        transform: translateY(1px);
+      }
+      .header-banner {
+        width: 100%;
+        border-radius: 0.3rem;
+        border: 1px solid #111111;
+        margin-top: 1.25rem;
+        overflow: hidden;
+      }
+      .header-banner img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
+      }
+    }
+  </style>
+  <style>
+.cat-btn {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
 
-        .header{
-            background: #111;
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-        }
+.cat-btn:hover {
+  transform: translateY(-2px);
+  background: #f3f4f6;
+}
 
-        .card{
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,.08);
-        }
-
-        .signal{
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .insight{
-            margin: 10px 0;
-        }
-
-        .tag{
-            display: inline-block;
-            background: #e8ecff;
-            color: #3355ff;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-
-        .meta{
-            margin-top: 10px;
-            color: gray;
-        }
-
-        a{
-            color: #3366ff;
-            text-decoration: none;
-        }
-    </style>
+.cat-btn.active {
+  background: #1f2937;
+  color: white;
+  transform: scale(1.03);
+}
+</style>
 </head>
+<body class="paper-texture grain-filter font-song text-inkDark relative min-h-screen">
+<div class="container mx-auto px-4 md:px-6 py-10 max-w-7xl relative z-10">
 
-<body>
-
-<div class="header">
-    <h1>🚀 AI Daily Report</h1>
-    <p>{{ summary }}</p>
-</div>
-
-{% for s in signals %}
-
-<div class="card">
-    <div class="signal">🔥 {{ s.signal }}</div>
-
-    <div class="insight">💡 {{ s.insight }}</div>
-
-    <div class="meta">
-        <span class="tag">{{ s.category }}</span>
-        ⭐ {{ s.impact }}
-        <br><br>
-        <a href="{{ s.url }}" target="_blank">查看原文 →</a>
+  <!-- 顶部标题固定卡片 -->
+  <div class="wood-border bg-paperBg p-6 md:p-8 mb-8 animate-slideBase">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-wide flex items-center gap-3 text-inkDark">
+          <i class="fa fa-newspaper-o text-sealRed animate-softFloat"></i>
+          AI 周报
+        </h1>
+        <div class="mt-3 space-y-1 text-inkMid">
+          <p><span class="font-semibold">本期编辑：</span>产品资讯归档组</p>
+          <p><span class="font-semibold">本期统计周期：</span>2026.06.22 — 2026.07.05（双周）</p>
+        </div>
+        <p class="text-inkLight mt-2">每两周一归档 · 原文直达 · 行业资讯分类汇总</p>
+      </div>
+      <div class="flex gap-3 flex-wrap items-center">
+        <input id="searchInput" type="text" placeholder="搜索标题、标签、关键词"
+          class="w-full md:w-72 px-4 py-2.5 wood-border-sm bg-paperBg focus:outline-none focus:bg-white transition-all text-inkDark">
+        <button id="themeSwitch" class="p-2.5 wood-border-sm bg-paperBg hover:bg-bronzeGold/10 btn-paper text-inkDark">
+          <i class="fa fa-moon-o"></i>
+        </button>
+        <button class="bg-inkDark text-paperBg px-5 py-2.5 wood-border-sm hover:bg-sealRed btn-paper">
+          <i class="fa fa-download mr-1"></i>导出完整周报
+        </button>
+      </div>
     </div>
+    <!-- 标题卡片底部固定图片位 -->
+    <div class="header-banner">
+      <img src="https://p3-flow-image-sign.byteimg.com/ocean-cloud-tos/49373505012047106/1751006829393990b79f0a99c49373505012047106.png~tplv-vm77ns7g98-image.png?rk3s=18ea6f23&x-expires=1768184621&x-signature=Zt5%2B9yGzSbMk5R%2FmZqK%2BfXqN17U%3D" alt="周报横幅">
+    </div>
+  </div>
+
+  <!-- 周期选择栏 -->
+  <div class="wood-border-sm bg-paperBg p-5 mb-8 animate-slideBase" style="animation-delay:0.12s">
+    <div class="flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <span class="font-semibold text-sealRed">切换归档期数：</span>
+        <select id="weekSelect" class="px-3 py-2 wood-border-sm bg-paperBg outline-none text-inkDark">
+          <option value="w26">第26期｜2026.06.22 - 2026.07.05</option>
+          <option value="w25">第25期｜2026.06.08 - 2026.06.21</option>
+          <option value="w24">第24期｜2026.05.25 - 2026.06.07</option>
+        </select>
+      </div>
+      <button id="toggleCategoryBox" class="px-4 py-2 wood-border-sm bg-bronzeGold/10 hover:bg-bronzeGold/20 btn-paper flex gap-2 items-center text-inkDark">
+        <i class="fa fa-th-large"></i>全部分类筛选
+      </button>
+    </div>
+  </div>
+
+  <!-- 分类面板 -->
+  <div id="categoryBox" class="wood-border bg-paperBg p-6 mb-8 animate-slideBase" style="animation-delay:0.24s">
+    <h2 class="text-xl font-semibold text-sealRed mb-5 flex items-center gap-2">
+      <i class="fa fa-tags text-sealRed"></i>资讯分类库
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      <button data-cat="all" class="cat-btn px-4 py-3 wood-border-sm hidden bg-paperBg text-left btn-paper active text-inkDark">
+        <i class="fa fa-file-text-o mr-2 text-oldCyan"></i>全部资讯
+      </button>
+      <button data-cat="llm" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
+        <i class="fa fa-cpu mr-2 text-sealRed"></i>大模型
+      </button>
+      <button data-cat="update" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
+        <i class="fa fa-refresh mr-2 text-bambooGreen"></i>产品更新
+      </button>
+      <button data-cat="report" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
+        <i class="fa fa-line-chart mr-2 text-oldCyan"></i>行业报告
+      </button>
+      <button data-cat="multimodal" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
+        <i class="fa fa-picture-o mr-2 text-sealRed"></i>多模态
+      </button>
+      <button data-cat="tob" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
+        <i class="fa fa-building mr-2 text-bambooGreen"></i>ToB企业服务
+      </button>
+      <button data-cat="office" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
+        <i class="fa fa-briefcase mr-2 text-bambooGreen"></i>办公AI
+      </button>
+      <button data-cat="评测" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
+        <i class="fa fa-check-square mr-2 text-oldCyan"></i>产品评测
+      </button>
+    </div>
+  </div>
+
+  <!-- 主体容器 -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- 左侧资讯容器：卡片100%自动生成，无手写HTML -->
+    <div class="lg:col-span-2 relative pl-10" id="articleWrap">
+      <div class="timeline-axis"></div>
+    </div>
+
+    <!-- 右侧边栏 -->
+    <div class="lg:col-span-1 space-y-7">
+      <!-- 热榜容器：自动生成 -->
+      <div class="wood-border bg-paperBg p-6 animate-slideBase" style="animation-delay:0.36s">
+        <h2 class="text-xl font-semibold text-sealRed mb-5 flex items-center gap-2">
+          <i class="fa fa-fire text-sealRed animate-softFloat"></i>本期热点资讯
+        </h2>
+        <div id="hotWrap" class="space-y-4"></div>
+      </div>
+      <!-- 操作面板固定 -->
+      <div class="wood-border bg-paperBg p-6 animate-slideBase" style="animation-delay:0.48s">
+        <h2 class="text-xl font-semibold text-bambooGreen mb-5 flex items-center gap-2">
+          <i class="fa fa-cogs text-bambooGreen"></i>周报快捷操作
+        </h2>
+        <div class="space-y-3">
+          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+            <i class="fa fa-plus-circle mr-2 text-sealRed"></i>新增本期资讯
+          </button>
+          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+            <i class="fa fa-list-alt mr-2 text-oldCyan"></i>批量整理周报摘要
+          </button>
+          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+            <i class="fa fa-file-text mr-2 text-sealRed"></i>生成完整周报文档
+          </button>
+          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+            <i class="fa fa-history mr-2 text-bambooGreen"></i>往期周报归档库
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-{% endfor %}
-
+<script type="module"
+        src="{{ url_for('static', filename='js/app.js') }}">
+</script>
 </body>
 </html>
