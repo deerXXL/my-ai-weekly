@@ -5,7 +5,7 @@ export function renderArticle(list) {
 
   list.forEach((item, idx) => {
 
-    const tagHtml = item.tags.map(tag => {
+    const tagHtml = (item.tags || []).map(tag => {
       if (tag.includes("热榜")) {
         return `<span class="tag-label px-2 py-0.5 rounded-sm bg-bronzeGold/20 text-bronzeGold text-xs">${tag}</span>`;
       }

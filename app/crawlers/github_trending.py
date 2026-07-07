@@ -1,19 +1,44 @@
 import requests
+import urllib3
+
 from bs4 import BeautifulSoup
 from app.models.raw_item import RawItem
 
 
+urllib3.disable_warnings()
+
 def fetch_github_trending():
+
     print("🚀 开始抓取 GitHub Trending...")
 
-    url = "https://github.com/trending/javascript?since=daily"
+    try:
+        ...
+        
+    except Exception as e:
+
+        print("GitHub失败，启用备用数据")
+
+        return [
+            RawItem(
+                source="github",
+                title="AI项目抓取失败测试",
+                description="GitHub暂时无法访问",
+                url="https://github.com"
+            )
+        ]
+
+    url = "https://github.com/trending?since=weekly"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
     }
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=60
+)
         print("状态码:", response.status_code)
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -52,5 +77,5 @@ def fetch_github_trending():
         return items
 
     except Exception as e:
-        print("❌ 抓取失败:", e)
+        print("❌ GitHub抓取失败:", repr(e))
         return []

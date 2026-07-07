@@ -49,10 +49,11 @@ def call_llm(prompt):
                 "content": prompt
             }
         ],
-        temperature=0.3
+        temperature=0
     )
 
     return response.choices[0].message.content
+
 
 
 def parse_signal(content, item):
@@ -60,6 +61,11 @@ def parse_signal(content, item):
     解析模型返回结果
     """
 
+    content = content.strip()
+
+    if content.startswith("```"):
+        content = content.replace("```json","")
+        content = content.replace("```","")
     try:
 
         data = json.loads(content)
@@ -84,7 +90,7 @@ def parse_signal(content, item):
 
         return SignalCard(
             signal="parse_error",
-            insight=content,
+            insight="AI解析失败，请重新生成",
             category="Unknown",
             impact=0,
             source=item.source,

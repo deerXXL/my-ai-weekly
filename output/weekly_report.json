@@ -1,24 +1,57 @@
 [
     {
-        "title": "OpenAI 发布最新模型",
+        "title": "usestrix/strix",
         "tags": [
-            "OpenAI",
-            "大模型"
+            "开源项目",
+            "github"
         ],
-        "date": "2026-07-06",
-        "desc": "OpenAI 发布最新模型，推理能力进一步提升。",
-        "hot": 98,
-        "link": "https://openai.com"
+        "date": "2026-07-07",
+        "desc": "解决应用安全漏洞检测和修复问题，提供自动化AI驱动的渗透测试能力",
+        "hot": 4,
+        "link": "https://github.com/usestrix/strix"
     },
     {
-        "title": "GitHub Trending AI 项目",
+        "title": "hasaneyldrm/exercises-dataset",
         "tags": [
-            "GitHub",
-            "开源"
+            "开源项目",
+            "github"
         ],
-        "date": "2026-07-05",
-        "desc": "本周 GitHub AI 热门项目整理。",
-        "hot": 87,
-        "link": "https://github.com/trending"
+        "date": "2026-07-07",
+        "desc": "为健身应用、动作识别或运动分析提供结构化训练数据",
+        "hot": 3,
+        "link": "https://github.com/hasaneyldrm/exercises-dataset"
+    },
+    {
+        "title": "diegosouzapw/OmniRoute",
+        "tags": [
+            "开源项目",
+            "github"
+        ],
+        "date": "2026-07-07",
+        "desc": "解决开发者需要连接多个AI提供商时的高成本和复杂性，通过统一接口和智能压缩降低使用成本",
+        "hot": 4,
+        "link": "https://github.com/diegosouzapw/OmniRoute"
+    },
+    {
+        "title": "Zackriya-Solutions/meetily",
+        "tags": [
+            "开源项目",
+            "github"
+        ],
+        "date": "2026-07-07",
+        "desc": "解决会议记录依赖云端服务带来的隐私风险，提供完全本地化的实时语音转录、说话人识别和摘要生成功能",
+        "hot": 4,
+        "link": "https://github.com/Zackriya-Solutions/meetily"
+    },
+    {
+        "title": "altic-dev/FluidVoice",
+        "tags": [
+            "产品更新",
+            "github"
+        ],
+        "date": "2026-07-07",
+        "desc": "解决macOS用户对快速、本地化、隐私安全的语音听写需求，避免云端处理延迟和数据泄露。",
+        "hot": 3,
+        "link": "https://github.com/altic-dev/FluidVoice"
     }
 ]
