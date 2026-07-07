@@ -1,1 +1,30 @@
-.env 
+# 环境与密钥
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+
+# 生成产物
+output/
+daily_report_*.md
+
+# IDE / 系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 测试与类型检查缓存
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
