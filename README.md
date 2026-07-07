@@ -1,4 +1,4 @@
-# my-ai-weekly
+# ai-weekly
 
 AI 资讯采集 → LLM 分析 → 周报生成 → Web 展示。
 
