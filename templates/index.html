@@ -213,44 +213,32 @@
           <option value="w24">第24期｜2026.05.25 - 2026.06.07</option>
         </select>
       </div>
-      <button id="toggleCategoryBox" class="px-4 py-2 wood-border-sm bg-bronzeGold/10 hover:bg-bronzeGold/20 btn-paper flex gap-2 items-center text-inkDark">
-        <i class="fa fa-th-large"></i>全部分类筛选
-      </button>
+      <div class="flex flex-wrap justify-between items-center gap-4">
+
+  <div class="flex items-center gap-3">
+    <span class="font-semibold text-sealRed">
+      当前归档期：
+    </span>
+
+    <select id="weekSelect" 
+      class="px-3 py-2 wood-border-sm bg-paperBg outline-none text-inkDark">
+
+      <option value="w26">
+        第26期｜2026.06.22 - 2026.07.05
+      </option>
+
+      <option value="w25">
+        第25期｜2026.06.08 - 2026.06.21
+      </option>
+
+    </select>
+
+  </div>
+
+</div>
     </div>
   </div>
 
-  <!-- 分类面板 -->
-  <div id="categoryBox" class="wood-border bg-paperBg p-6 mb-8 animate-slideBase" style="animation-delay:0.24s">
-    <h2 class="text-xl font-semibold text-sealRed mb-5 flex items-center gap-2">
-      <i class="fa fa-tags text-sealRed"></i>资讯分类库
-    </h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-      <button data-cat="all" class="cat-btn px-4 py-3 wood-border-sm hidden bg-paperBg text-left btn-paper active text-inkDark">
-        <i class="fa fa-file-text-o mr-2 text-oldCyan"></i>全部资讯
-      </button>
-      <button data-cat="llm" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
-        <i class="fa fa-cpu mr-2 text-sealRed"></i>大模型
-      </button>
-      <button data-cat="update" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
-        <i class="fa fa-refresh mr-2 text-bambooGreen"></i>产品更新
-      </button>
-      <button data-cat="report" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
-        <i class="fa fa-line-chart mr-2 text-oldCyan"></i>行业报告
-      </button>
-      <button data-cat="multimodal" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
-        <i class="fa fa-picture-o mr-2 text-sealRed"></i>多模态
-      </button>
-      <button data-cat="tob" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
-        <i class="fa fa-building mr-2 text-bambooGreen"></i>ToB企业服务
-      </button>
-      <button data-cat="office" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
-        <i class="fa fa-briefcase mr-2 text-bambooGreen"></i>办公AI
-      </button>
-      <button data-cat="评测" class="cat-btn px-4 py-3 wood-border-sm bg-paperBg text-left btn-paper text-inkDark">
-        <i class="fa fa-check-square mr-2 text-oldCyan"></i>产品评测
-      </button>
-    </div>
-  </div>
 
   <!-- 主体容器 -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
