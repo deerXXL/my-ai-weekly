@@ -6,14 +6,14 @@ from openai import OpenAI
 from app.models.signal_card import SignalCard
 
 from config import (
-    DEEPSEEK_API_KEY,
-    DEEPSEEK_BASE_URL,
-    MODEL_NAME
+    ARK_API_KEY,
+    ARK_BASE_URL,
+    ARK_MODEL
 )
 
 client = OpenAI(
-    api_key=DEEPSEEK_API_KEY,
-    base_url=DEEPSEEK_BASE_URL
+    api_key=ARK_API_KEY,
+    base_url=ARK_BASE_URL
 )
 
 PROMPT_PATH = Path("prompts/signal.md")
@@ -38,7 +38,7 @@ def call_llm(prompt):
     """
 
     response = client.chat.completions.create(
-        model=MODEL_NAME,
+        model=ARK_MODEL,
         messages=[
             {
                 "role": "system",
