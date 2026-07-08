@@ -1,20 +1,6 @@
-from flask import Flask, render_template
-
-from app.pipeline import run_pipeline
-
-app = Flask(__name__)
-
-
-@app.route("/")
-def home():
-    report = run_pipeline()
-
-    return render_template(
-        "index.html",
-        summary=report.summary,
-        signals=report.signals[:10]
-    )
+from web_server import app
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # use_reloader=False 防止后台任务线程被重复启动两次
+    app.run(debug=True, use_reloader=False)

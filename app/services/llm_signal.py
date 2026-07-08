@@ -110,3 +110,50 @@ def generate_signal(item):
     print("LLM RAW:", content)
 
     return parse_signal(content, item)
+
+
+# ============================================================
+# 为"批量整理周报摘要"按钮提供的工具函数
+# 接受纯字典(从 weekly JSON 反序列化得到)，返回更新后的字典
+# ============================================================
+
+def regenerate_signal_card(signal_dict: dict) -> dict:
+    """
+    根据 weekly JSON 中已存在的 signal 字典，重新调用 LLM 生成摘要。
+    输入字段期望: title / url / source / insight(可空)
+    返回新字典: {signal, insight, category, impact}，失败时保留原值。
+    """
+    import json as _json
+
+    # 构造一个伪 item 以复用 load_prompt
+    class _Item:
+        def __init__(self, t, d, u):
+            self.title = t
+            self.description = d
+            self.url = u
+
+    item = _Item(
+        signal_dict.get("title", ""),
+        signal_dict.get("insight") or signal_dict.get("signal") or "",
+        signal_dict.get("url", ""),
+    )
+
+    try:
+        content = call_llm(load_prompt(item)).strip()
+        if content.startswith("```"):
+            content = content.replace("```json", "").replace("```", "")
+        data = _json.loads(content)
+        return {
+            "signal": data.get("signal") or signal_dict.get("signal", ""),
+            "insight": data.get("insight") or signal_dict.get("insight", ""),
+            "category": data.get("category") or signal_dict.get("category", "AI"),
+            "impact": int(data.get("impact") or signal_dict.get("impact") or 1),
+        }
+    except Exception as exc:
+        print("regenerate_signal_card failed:", exc)
+        return {
+            "signal": signal_dict.get("signal", ""),
+            "insight": signal_dict.get("insight", ""),
+            "category": signal_dict.get("category", "AI"),
+            "impact": signal_dict.get("impact", 1),
+        }

@@ -14,16 +14,32 @@
       darkMode: 'class',
       theme: {
         extend: {
-          colors: {
-            paperBg: '#f7f3e8',
-            inkDark: '#111111',
-            inkMid: '#333333',
-            inkLight: '#555555',
-            sealRed: '#a62c2c',
-            bambooGreen: '#506d4e',
-            oldCyan: '#365772',
-            bronzeGold: '#b8945c',
+          colors:{
+            paperBg:{
+            DEFAULT:'#f7f3e8',
+            dark:'#111827'
           },
+
+            inkDark:{
+            DEFAULT:'#111111',
+            dark:'#f8fafc'
+          },
+
+            inkMid:{
+            DEFAULT:'#333333',
+            dark:'#cbd5e1'
+          },
+
+            inkLight:{
+            DEFAULT:'#555555',
+            dark:'#94a3b8'
+          },
+
+          sealRed:'#a62c2c',
+          bambooGreen:'#506d4e',
+          oldCyan:'#365772',
+          bronzeGold:'#b8945c',
+        },
           fontFamily: {
             song: ['"Noto Serif SC"', 'serif'],
           },
@@ -65,6 +81,12 @@
           radial-gradient(circle at 88% 25%, rgba(166, 44, 44, 0.03) 0%, transparent 50%),
           linear-gradient(180deg, #f7f3e8 0%, #efe9dd 100%);
       }
+      .dark .paper-texture {
+        background-image:
+          radial-gradient(circle at 12% 15%, rgba(255, 255, 255, 0.02) 0%, transparent 55%),
+          radial-gradient(circle at 88% 25%, rgba(166, 44, 44, 0.05) 0%, transparent 50%),
+          linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      }
       .grain-filter::before {
         content: "";
         position: absolute;
@@ -77,10 +99,18 @@
         box-shadow: 5px 5px 0 #111111;
         border-radius: 0.4rem;
       }
+      .dark .wood-border {
+        border-color: #f8fafc;
+        box-shadow: 5px 5px 0 #0f172a, 0 0 0 1px #f8fafc;
+      }
       .wood-border-sm {
         border: 1px solid #111111;
         box-shadow: 2px 2px 0 #111111;
         border-radius: 0.3rem;
+      }
+      .dark .wood-border-sm {
+        border-color: #f8fafc;
+        box-shadow: 2px 2px 0 #0f172a;
       }
       .timeline-axis {
         position: absolute;
@@ -90,15 +120,23 @@
         width: 2px;
         background: repeating-linear-gradient(180deg, #111111, #111111 8px, transparent 8px, transparent 16px);
       }
+      .dark .timeline-axis {
+        background: repeating-linear-gradient(180deg, #cbd5e1, #cbd5e1 8px, transparent 8px, transparent 16px);
+      }
       .timeline-dot {
         position: absolute;
         left: 12px;
+        top: 28px;
         width: 14px;
         height: 14px;
         border-radius: 999px;
         background: #a62c2c;
         border: 2px solid #f7f3e8;
         animation: dotBreathe 2.4s infinite;
+        z-index: 2;
+      }
+      .dark .timeline-dot {
+        border-color: #0f172a;
       }
       .card-paper-hover {
         transition: all 0.3s ease;
@@ -106,6 +144,9 @@
       .card-paper-hover:hover {
         transform: translateY(-5px);
         box-shadow: 7px 7px 0 #111111, 0 0 12px rgba(166, 44, 44, 0.12);
+      }
+      .dark .card-paper-hover:hover {
+        box-shadow: 7px 7px 0 #0f172a, 0 0 0 1px #f8fafc, 0 0 12px rgba(166, 44, 44, 0.2);
       }
       .card-paper-hover:active {
         animation: pressPaper 0.18s;
@@ -116,9 +157,15 @@
         color: #111111;
         transition: color 0.28s ease, transform 0.28s ease;
       }
+      .dark .article-title {
+        color: #f1f5f9;
+      }
       .card-paper-hover:hover .article-title {
         color: #a62c2c;
         transform: translateX(3px);
+      }
+      .dark .card-paper-hover:hover .article-title {
+        color: #f87171;
       }
       .tag-label {
         transition: transform 0.24s ease;
@@ -142,11 +189,48 @@
         margin-top: 1.25rem;
         overflow: hidden;
       }
+      .dark .header-banner {
+        border-color: #f8fafc;
+      }
       .header-banner img {
         width: 100%;
         height: auto;
         display: block;
         object-fit: cover;
+      }
+
+      /* 主题切换按钮 */
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.9rem;
+        border: 1px solid #111111;
+        box-shadow: 2px 2px 0 #111111;
+        border-radius: 0.3rem;
+        background: #f7f3e8;
+        color: #111111;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+      .theme-toggle:hover {
+        transform: translateY(-1px);
+        background: #ffffff;
+      }
+      .theme-toggle:active {
+        transform: translateY(1px);
+        box-shadow: 1px 1px 0 #111111;
+      }
+      .dark .theme-toggle {
+        background: #1e293b;
+        color: #f8fafc;
+        border-color: #f8fafc;
+        box-shadow: 2px 2px 0 #0f172a;
+      }
+      .dark .theme-toggle:hover {
+        background: #334155;
       }
     }
   </style>
@@ -166,32 +250,63 @@
   color: white;
   transform: scale(1.03);
 }
+
+/* 暗色模式 */
+.dark .cat-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .cat-btn.active {
+  background: #f1f5f9;
+  color: #111827;
+}
 </style>
 </head>
-<body class="paper-texture grain-filter font-song text-inkDark relative min-h-screen">
+<body class="
+paper-texture
+grain-filter
+font-song
+text-inkDark
+relative
+min-h-screen
+">
+
+<script>
+  // 主题：在 head 末尾同步读取 localStorage，避免首屏闪烁
+  (function () {
+    try {
+      var saved = localStorage.getItem('wb-theme');
+      if (saved === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    } catch (e) {}
+  })();
+</script>
+
 <div class="container mx-auto px-4 md:px-6 py-10 max-w-7xl relative z-10">
 
   <!-- 顶部标题固定卡片 -->
-  <div class="wood-border bg-paperBg p-6 md:p-8 mb-8 animate-slideBase">
+  <div class="wood-border bg-paperBg dark:bg-gray-900 p-6 md:p-8 mb-8 animate-slideBase">
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold tracking-wide flex items-center gap-3 text-inkDark">
+        <h1 class="text-3xl md:text-4xl font-bold tracking-wide flex items-center gap-3 text-inkDark dark:text-gray-100">
           <i class="fa fa-newspaper-o text-sealRed animate-softFloat"></i>
           AI 周报
         </h1>
-        <div class="mt-3 space-y-1 text-inkMid">
+        <div class="mt-3 space-y-1 text-inkMid dark:text-gray-300">
           <p><span class="font-semibold">本期编辑：</span>产品资讯归档组</p>
           <p><span class="font-semibold">本期统计周期：</span>2026.06.22 — 2026.07.05（双周）</p>
         </div>
-        <p class="text-inkLight mt-2">每两周一归档 · 原文直达 · 行业资讯分类汇总</p>
+        <p class="text-inkLight dark:text-gray-400 mt-2">每两周一归档 · 原文直达 · 行业资讯分类汇总</p>
       </div>
       <div class="flex gap-3 flex-wrap items-center">
         <input id="searchInput" type="text" placeholder="搜索标题、标签、关键词"
-          class="w-full md:w-72 px-4 py-2.5 wood-border-sm bg-paperBg focus:outline-none focus:bg-white transition-all text-inkDark">
-        <button id="themeSwitch" class="p-2.5 wood-border-sm bg-paperBg hover:bg-bronzeGold/10 btn-paper text-inkDark">
-          <i class="fa fa-moon-o"></i>
+          class="w-full md:w-72 px-4 py-2.5 wood-border-sm bg-paperBg dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-gray-700 transition-all text-inkDark">
+        <button id="themeToggle" class="theme-toggle" title="切换亮/暗主题" aria-label="切换主题">
+          <i id="themeIcon" class="fa fa-moon-o"></i>
+          <span id="themeLabel">暗色</span>
         </button>
-        <button class="bg-inkDark text-paperBg px-5 py-2.5 wood-border-sm hover:bg-sealRed btn-paper">
+        <button data-action="export" class="bg-inkDark dark:bg-gray-100 text-paperBg dark:text-gray-900 px-5 py-2.5 wood-border-sm hover:bg-sealRed btn-paper">
           <i class="fa fa-download mr-1"></i>导出完整周报
         </button>
       </div>
@@ -203,37 +318,53 @@
   </div>
 
   <!-- 周期选择栏 -->
-  <div class="wood-border-sm bg-paperBg p-5 mb-8 animate-slideBase" style="animation-delay:0.12s">
-    <div class="flex flex-wrap justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <span class="font-semibold text-sealRed">切换归档期数：</span>
-        <select id="weekSelect" class="px-3 py-2 wood-border-sm bg-paperBg outline-none text-inkDark">
-          <option value="w26">第26期｜2026.06.22 - 2026.07.05</option>
-          <option value="w25">第25期｜2026.06.08 - 2026.06.21</option>
-          <option value="w24">第24期｜2026.05.25 - 2026.06.07</option>
-        </select>
-      </div>
-      <div class="flex flex-wrap justify-between items-center gap-4">
+<div class="wood-border-sm bg-paperBg dark:bg-gray-900 p-5 mb-8 animate-slideBase" style="animation-delay:0.12s">
 
-  <div class="flex items-center gap-3">
-    <span class="font-semibold text-sealRed">
-      当前归档期：
-    </span>
+  <div class="flex flex-wrap justify-between items-center gap-4">
 
-    <select id="weekSelect" 
-      class="px-3 py-2 wood-border-sm bg-paperBg outline-none text-inkDark">
+    <div class="flex items-center gap-3">
 
-      <option value="w26">
-        第26期｜2026.06.22 - 2026.07.05
-      </option>
+      <span class="font-semibold text-sealRed">
+        切换归档期数：
+      </span>
 
-      <option value="w25">
-        第25期｜2026.06.08 - 2026.06.21
-      </option>
 
-    </select>
+      <select 
+        id="weekSelect"
+        class="px-3 py-2 wood-border-sm bg-paperBg dark:bg-gray-800 outline-none text-inkDark dark:text-gray-100">
+
+        <option>
+          加载中...
+        </option>
+
+      </select>
+
+
+    </div>
+
+
+    <div class="flex items-center gap-3">
+
+      <span class="font-semibold text-sealRed">
+        当前归档期：
+      </span>
+
+
+      <span 
+        id="currentWeek"
+        class="px-3 py-2 wood-border-sm bg-paperBg dark:bg-gray-800 text-inkDark dark:text-gray-100">
+
+        --
+
+      </span>
+
+
+    </div>
+
 
   </div>
+
+</div>
 
 </div>
     </div>
@@ -250,28 +381,38 @@
     <!-- 右侧边栏 -->
     <div class="lg:col-span-1 space-y-7">
       <!-- 热榜容器：自动生成 -->
-      <div class="wood-border bg-paperBg p-6 animate-slideBase" style="animation-delay:0.36s">
+      <div class="wood-border bg-paperBg dark:bg-gray-900 p-6 animate-slideBase" style="animation-delay:0.36s">
         <h2 class="text-xl font-semibold text-sealRed mb-5 flex items-center gap-2">
           <i class="fa fa-fire text-sealRed animate-softFloat"></i>本期热点资讯
         </h2>
         <div id="hotWrap" class="space-y-4"></div>
       </div>
       <!-- 操作面板固定 -->
-      <div class="wood-border bg-paperBg p-6 animate-slideBase" style="animation-delay:0.48s">
+      <div class="wood-border bg-paperBg dark:bg-gray-900 p-6 animate-slideBase" style="animation-delay:0.48s">
         <h2 class="text-xl font-semibold text-bambooGreen mb-5 flex items-center gap-2">
           <i class="fa fa-cogs text-bambooGreen"></i>周报快捷操作
         </h2>
+        <div id="quickStatus" class="hidden mb-4 p-3 rounded-sm bg-sealRed/5 dark:bg-sealRed/10 border border-sealRed/30 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-sealRed font-semibold" id="quickStatusName">任务进行中…</span>
+            <span class="text-inkLight dark:text-gray-400" id="quickStatusPercent">0%</span>
+          </div>
+          <div class="mt-2 h-1.5 bg-inkDark/10 dark:bg-white/10 rounded-full overflow-hidden">
+            <div id="quickStatusBar" class="h-full bg-sealRed transition-all duration-300" style="width:0%"></div>
+          </div>
+          <p class="mt-2 text-inkMid dark:text-gray-300 text-xs" id="quickStatusMsg"></p>
+        </div>
         <div class="space-y-3">
-          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+          <button data-action="collect" class="w-full text-left p-3 rounded-sm bg-inkDark/5 dark:bg-white/10 hover:bg-inkDark/10 dark:hover:bg-white/20 text-sm btn-paper text-inkDark dark:text-gray-200">
             <i class="fa fa-plus-circle mr-2 text-sealRed"></i>新增本期资讯
           </button>
-          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+          <button data-action="summarize" class="w-full text-left p-3 rounded-sm bg-inkDark/5 dark:bg-white/10 hover:bg-inkDark/10 dark:hover:bg-white/20 text-sm btn-paper text-inkDark dark:text-gray-200">
             <i class="fa fa-list-alt mr-2 text-oldCyan"></i>批量整理周报摘要
           </button>
-          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+          <button data-action="export" class="w-full text-left p-3 rounded-sm bg-inkDark/5 dark:bg-white/10 hover:bg-inkDark/10 dark:hover:bg-white/20 text-sm btn-paper text-inkDark dark:text-gray-200">
             <i class="fa fa-file-text mr-2 text-sealRed"></i>生成完整周报文档
           </button>
-          <button class="w-full text-left p-3 rounded-sm bg-inkDark/5 hover:bg-inkDark/10 text-sm btn-paper text-inkDark">
+          <button data-action="archive" class="w-full text-left p-3 rounded-sm bg-inkDark/5 dark:bg-white/10 hover:bg-inkDark/10 dark:hover:bg-white/20 text-sm btn-paper text-inkDark dark:text-gray-200">
             <i class="fa fa-history mr-2 text-bambooGreen"></i>往期周报归档库
           </button>
         </div>
@@ -282,6 +423,11 @@
 
 <script type="module"
         src="{{ url_for('static', filename='js/app.js') }}">
+</script>
+<script type="module">
+  // 主题切换：同步 localStorage + 切换 html.dark
+  import { initThemeToggle } from "{{ url_for('static', filename='js/theme.js') }}";
+  initThemeToggle();
 </script>
 </body>
 </html>
