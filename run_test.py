@@ -1,22 +1,21 @@
-from app.pipeline import run_pipeline
+﻿from app.pipeline import run_pipeline
 from app.services.file_writer import write_markdown, write_json
 
 
 def main():
-    print("\n🚀 V3 AI日报生成开始...\n")
+    print("\nAI daily report generation started...\n")
 
     report = run_pipeline()
 
-    print("\n📊 日报摘要:")
+    print("\nReport summary:")
     print(report.summary)
 
-    print("\n🔥 TOP SIGNALS:\n")
-
-    for s in report.signals[:3]:
-        print("🔥", s.signal)
-        print("💡", s.insight)
-        print("🏷", s.category)
-        print("⭐", s.impact)
+    print("\nTop signals:\n")
+    for signal in report.signals[:3]:
+        print("Signal:", signal.signal)
+        print("Insight:", signal.insight)
+        print("Category:", signal.category)
+        print("Impact:", signal.impact)
         print("-" * 50)
 
     write_markdown(report)

@@ -19,9 +19,9 @@ pip install flask python-dotenv openai requests beautifulsoup4 feedparser
 根目录创建 `.env`：
 
 ```env
-DEEPSEEK_API_KEY=你的火山方舟_API_Key
-DEEPSEEK_BASE_URL=https://ark.cn-beijing.volces.com/api/coding/v3
-MODEL_NAME=ark-code-latest
+ARK_API_KEY=你的火山方舟Coding_Plan_API_Key
+ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/coding/v3
+ARK_MODEL=ark-code-latest
 ```
 
 API Key 在 [火山方舟控制台](https://console.volcengine.com/ark) 获取。
