@@ -1,4 +1,4 @@
-﻿from app.crawlers.github_trending import fetch_github_trending
+from app.crawlers.github_trending import fetch_github_trending
 from app.crawlers.openai_blog import fetch_openai_blog
 from app.crawlers.huggingface_blog import fetch_huggingface_blog
 from app.crawlers.google_research import fetch_google_research

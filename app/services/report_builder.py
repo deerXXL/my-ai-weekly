@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from app.models.daily_report import DailyReport
 

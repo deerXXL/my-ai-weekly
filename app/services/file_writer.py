@@ -1,4 +1,4 @@
-﻿import json
+import json
 import shutil
 import os
 from dataclasses import asdict
