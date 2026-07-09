@@ -1,71 +1,43 @@
 import json
-import shutil
-import os
-from dataclasses import asdict
 from pathlib import Path
 
-
-BASE_DIR = Path(__file__).resolve().parents[2]
-
-OUTPUT_DIR = BASE_DIR / "output"
-
-
-def write_markdown(report):
-    """Write a Markdown report."""
-    os.makedirs("output", exist_ok=True)
-
-    filename = f"output/weekly-{report.date}.md"
-
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(f"# {report.title}\n\n")
-        f.write(f"**Date:** {report.date}\n\n")
-        f.write("## Summary\n\n")
-        f.write(report.summary + "\n\n")
-        f.write("## AI Signals\n\n")
-
-        for i, signal in enumerate(report.signals, 1):
-            f.write(f"### {i}. {signal.title}\n")
-            f.write(f"- Signal: {signal.signal}\n")
-            f.write(f"- Insight: {signal.insight}\n")
-            f.write(f"- Category: {signal.category}\n")
-            f.write(f"- Impact: {signal.impact}\n")
-            f.write(f"- URL: {signal.url}\n\n")
-
-    print(f"Markdown generated: {filename}")
+from app.models.daily_report import WeeklyNewsletter
+from app.services.export_builder import build_export_html, build_export_markdown
+from app.services.issue_paths import (
+    NEWSLETTER_HTML,
+    NEWSLETTER_JSON,
+    NEWSLETTER_MD,
+    ensure_issue_dir,
+    set_latest_issue,
+)
 
 
-def write_json(report):
-    """Write JSON for Web/API/Notion consumers."""
-
-    OUTPUT_DIR.mkdir(
-        exist_ok=True
-    )
-
-    filename = OUTPUT_DIR / f"weekly-{report.date}.json"
+def _target_dir(newsletter: WeeklyNewsletter) -> Path:
+    date_tag = newsletter.date or newsletter.generated_at[:10]
+    return ensure_issue_dir(date_tag)
 
 
-    with open(
-        filename,
-        "w",
-        encoding="utf-8"
-    ) as f:
-
-        json.dump(
-            asdict(report),
-            f,
-            ensure_ascii=False,
-            indent=4,
-        )
+def write_html(newsletter: WeeklyNewsletter) -> Path:
+    folder = _target_dir(newsletter)
+    path = folder / NEWSLETTER_HTML
+    path.write_text(build_export_html(newsletter), encoding="utf-8")
+    set_latest_issue(newsletter.date or newsletter.generated_at[:10])
+    print(f"HTML generated: {path}")
+    return path
 
 
-    # 更新 latest.json
+def write_markdown(newsletter: WeeklyNewsletter) -> Path:
+    folder = _target_dir(newsletter)
+    path = folder / NEWSLETTER_MD
+    path.write_text(build_export_markdown(newsletter), encoding="utf-8")
+    print(f"Markdown generated: {path}")
+    return path
 
-    shutil.copy(
-        filename,
-        OUTPUT_DIR / "latest.json"
-    )
 
-
-    print(
-        f"JSON generated: {filename}"
-    )
+def write_json(newsletter: WeeklyNewsletter) -> Path:
+    folder = _target_dir(newsletter)
+    path = folder / NEWSLETTER_JSON
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(newsletter.to_dict(), f, ensure_ascii=False, indent=2)
+    print(f"JSON generated: {path}")
+    return path
