@@ -84,9 +84,34 @@ def load_latest_report() -> dict:
     }
 
 
+def _extract_date_from_text(text: str) -> str:
+    """从标题文本里尝试提取 'Jun 23, 2026' / '2026-07-09' 等日期。"""
+    if not text:
+        return ""
+    from datetime import datetime
+    import re
+
+    # 英文格式：Jun 23, 2026
+    m = re.search(r"([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})", text)
+    if m:
+        try:
+            return datetime.strptime(m.group(1), "%b %d, %Y").strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    # 数字格式：2026-07-09 / 2026/07/09
+    m = re.search(r"(\d{4}[-/]\d{2}[-/]\d{2})", text)
+    if m:
+        try:
+            return datetime.strptime(m.group(1).replace("/", "-"), "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    return ""
+
+
 def to_frontend_articles(report: dict) -> list[dict]:
     """将流水线 signals 转为前端 render.js 所需格式，按发布时间升序排列"""
-    date = report.get("date", "")
     articles = []
 
     # 建立 items 的 URL -> published_at 映射，用于旧报告信号缺失日期时回退
@@ -108,7 +133,8 @@ def to_frontend_articles(report: dict) -> list[dict]:
         pub_date = (
             signal.get("published_at")
             or item_date_map.get(signal.get("url"), "")
-            or date
+            or _extract_date_from_text(signal.get("title", ""))
+            or ""
         )
         articles.append({
             "idx": idx + 1,

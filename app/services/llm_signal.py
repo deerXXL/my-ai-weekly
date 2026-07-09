@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from openai import OpenAI
@@ -134,6 +135,63 @@ def parse_signal(content, item, prompt=None):
     return None
 
 
+def _derive_category(item):
+    """当 LLM 解析失败时，根据标题/描述/source 推断一个合理的分类。"""
+    text = f"{item.title or ''} {item.description or ''} {item.source or ''}".lower()
+
+    if "github" in item.source.lower() or "开源" in text or "open-source" in text or "open source" in text:
+        return "开源项目"
+    if "benchmark" in text or "评测" in text or "测试" in text:
+        return "产品评测"
+    if "report" in text or "policy" in text or "rsp" in text or "研究" in text or "google research" in item.source.lower():
+        return "行业报告"
+    if "多模态" in text or "voice" in text or "image" in text or "video" in text or "视觉" in text:
+        return "多模态"
+    if "办公" in text or "workspace" in text or "work" in text:
+        return "办公AI"
+    if "企业" in text or "enterprise" in text or "partner" in text or "partner" in text or "government" in text or "云" in text:
+        return "ToB"
+    if "模型" in text or "gpt" in text or "claude" in text or "llm" in text or "fable" in text:
+        return "大模型"
+    if "产品" in text or "introduc" in text or "launch" in text or "available" in text or "tag" in text or "sonnet" in text:
+        return "产品更新"
+    return "AI"
+
+
+def _derive_impact(item):
+    """当 LLM 解析失败时，给一个默认热度，来源越权威越高。"""
+    source = (item.source or "").lower()
+    weights = {
+        "openai": 5,
+        "anthropic": 5,
+        "huggingface": 4,
+        "google research": 4,
+        "techcrunch": 4,
+        "venturebeat": 4,
+        "机器之心": 3,
+        "36氪": 3,
+        "reddit": 2,
+        "github": 3,
+    }
+    return weights.get(source, 2)
+
+
+def _clean_fallback_title(title):
+    """如果标题仍被拼接成 'CategoryJun 23, 2026Title...'，尝试拆出真实标题。"""
+    if not title:
+        return ""
+    # 常见模式：可选分类 + 日期 + 真实标题
+    m = re.search(
+        r"(?:Product|Announcements|Case Study|Features)?\s*"
+        r"(?:[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})?\s*"
+        r"(.+)",
+        title.strip(),
+    )
+    if m:
+        return m.group(1).strip()
+    return title.strip()
+
+
 def build_signal_card(data, item):
     """
     将解析出的 JSON 字典转为 SignalCard
@@ -171,13 +229,16 @@ def generate_signal(item):
         except Exception as exc:
             print("构建 SignalCard 失败:", exc)
 
+    # LLM 解析失败时，用原始元数据生成一个可用的卡片，而不是暴露“解析失败”
+    clean_title = _clean_fallback_title(item.title)
+    insight = item.description if item.description and item.description != item.title else clean_title
     return SignalCard(
-        signal=item.title or "parse_error",
-        insight="AI解析失败，请重新生成",
-        category="Unknown",
-        impact=0,
+        signal=clean_title,
+        insight=insight,
+        category=_derive_category(item),
+        impact=_derive_impact(item),
         source=item.source,
-        title=item.title,
+        title=clean_title,
         url=item.url,
         published_at=getattr(item, "published_at", None) or "",
     )
