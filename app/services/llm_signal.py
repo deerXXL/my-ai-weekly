@@ -32,9 +32,9 @@ def load_prompt(item):
     return prompt
 
 
-def call_llm(prompt):
+def call_llm(prompt, max_tokens=2048):
     """
-    调用 DeepSeek
+    调用 DeepSeek / Ark 模型
     """
 
     response = client.chat.completions.create(
@@ -42,61 +42,115 @@ def call_llm(prompt):
         messages=[
             {
                 "role": "system",
-                "content": "你是一位专业AI行业分析师，只输出JSON，不要输出其它内容。"
+                "content": "你是一位专业AI行业分析师，只输出JSON，不要输出其它内容。必须输出完整、合法的JSON，不要截断。"
             },
             {
                 "role": "user",
                 "content": prompt
             }
         ],
-        temperature=0
+        temperature=0,
+        max_tokens=max_tokens,
     )
 
     return response.choices[0].message.content
 
 
-
-def parse_signal(content, item):
+def _extract_json(text):
     """
-    解析模型返回结果
+    从文本中提取JSON对象，处理markdown代码块、首尾截断等常见问题
+    """
+    text = text.strip()
+
+    # 移除markdown代码块标记
+    if text.startswith("```"):
+        text = text.replace("```json", "")
+        text = text.replace("```", "")
+        text = text.strip()
+
+    # 如果内容被截断（末尾不是}），尝试找到最后一个完整的JSON对象
+    if not text.endswith("}"):
+        last_brace = text.rfind("}")
+        if last_brace > 0:
+            text = text[:last_brace + 1]
+
+    return text
+
+
+def _repair_simple_json(text):
+    """
+    简单修复：尝试补全缺失的引号/括号。如果无法修复则返回原文。
+    """
+    text = text.strip()
+
+    # 确保对象闭合
+    open_braces = text.count("{") - text.count("}")
+    if open_braces > 0:
+        text += "}" * open_braces
+
+    # 确保字符串值在最后一项缺失引号时修复
+    if text and not text.endswith('"') and not text.endswith("}"):
+        # 尝试补上缺失的引号和大括号
+        text = text.rstrip(",") + '\"}'
+
+    return text
+
+
+def parse_signal(content, item, prompt=None):
+    """
+    解析模型返回结果，带 JSON 提取/修复和一次重试
     """
 
-    content = content.strip()
+    def _try_parse(raw):
+        cleaned = _extract_json(raw)
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            # 尝试简单修复后再解析
+            repaired = _repair_simple_json(cleaned)
+            return json.loads(repaired)
 
-    if content.startswith("```"):
-        content = content.replace("```json","")
-        content = content.replace("```","")
+    # 第一次解析
     try:
-
-        data = json.loads(content)
-
-        if "signal" not in data:
-           raise ValueError(f"Invalid LLM output: {data}")
-
-        return SignalCard(
-            signal=data["signal"],
-            insight=data["insight"],
-            category=data["category"],
-            impact=int(data["impact"]),
-            source=item.source,
-            title=item.title,
-            url=item.url
-        )
-
+        data = _try_parse(content)
+        if "signal" in data:
+            return data
     except Exception as e:
-
         print("❌ JSON解析失败：", e)
-        print(content)
+        print("原始内容:", content[:500])
 
-        return SignalCard(
-            signal="parse_error",
-            insight="AI解析失败，请重新生成",
-            category="Unknown",
-            impact=0,
-            source=item.source,
-            title=item.title,
-            url=item.url
-        )
+    # 如果提供了 prompt，使用更大 token 上限重试一次
+    if prompt:
+        print("🔄 尝试用更大 token 重试解析...")
+        try:
+            retry_content = call_llm(prompt, max_tokens=4096)
+            data = _try_parse(retry_content)
+            if "signal" in data:
+                print("✅ 重试解析成功")
+                return data
+        except Exception as e2:
+            print("❌ 重试解析仍失败：", e2)
+
+    return None
+
+
+def build_signal_card(data, item):
+    """
+    将解析出的 JSON 字典转为 SignalCard
+    """
+    if not data or "signal" not in data:
+        raise ValueError("Invalid LLM output")
+
+    return SignalCard(
+        signal=data.get("signal", ""),
+        insight=data.get("insight", ""),
+        category=data.get("category", "AI"),
+        impact=int(data.get("impact", 1) or 1),
+        source=item.source,
+        title=item.title,
+        url=item.url,
+        published_at=getattr(item, "published_at", None) or "",
+    )
 
 
 def generate_signal(item):
@@ -107,9 +161,26 @@ def generate_signal(item):
     prompt = load_prompt(item)
 
     content = call_llm(prompt)
-    print("LLM RAW:", content)
+    print("LLM RAW:", content[:300])
 
-    return parse_signal(content, item)
+    data = parse_signal(content, item, prompt=prompt)
+
+    if data:
+        try:
+            return build_signal_card(data, item)
+        except Exception as exc:
+            print("构建 SignalCard 失败:", exc)
+
+    return SignalCard(
+        signal=item.title or "parse_error",
+        insight="AI解析失败，请重新生成",
+        category="Unknown",
+        impact=0,
+        source=item.source,
+        title=item.title,
+        url=item.url,
+        published_at=getattr(item, "published_at", None) or "",
+    )
 
 
 # ============================================================
@@ -139,10 +210,13 @@ def regenerate_signal_card(signal_dict: dict) -> dict:
     )
 
     try:
-        content = call_llm(load_prompt(item)).strip()
-        if content.startswith("```"):
-            content = content.replace("```json", "").replace("```", "")
-        data = _json.loads(content)
+        prompt = load_prompt(item)
+        content = call_llm(prompt).strip()
+        data = parse_signal(content, item, prompt=prompt)
+
+        if not data:
+            raise ValueError("LLM did not return valid JSON")
+
         return {
             "signal": data.get("signal") or signal_dict.get("signal", ""),
             "insight": data.get("insight") or signal_dict.get("insight", ""),

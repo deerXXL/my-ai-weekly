@@ -8,7 +8,7 @@ from app.models.raw_item import RawItem
 URL = "https://venturebeat.com/category/ai/"
 
 
-def fetch_venturebeat_ai():
+def fetch_venturebeat_ai(limit=50):
 
     items=[]
 
@@ -32,7 +32,7 @@ def fetch_venturebeat_ai():
 
         for h2 in soup.find_all(
             "h2",
-            limit=50
+            limit=limit
         ):
 
             title=h2.get_text(

@@ -85,9 +85,17 @@ def load_latest_report() -> dict:
 
 
 def to_frontend_articles(report: dict) -> list[dict]:
-    """将流水线 signals 转为前端 render.js 所需格式。"""
+    """将流水线 signals 转为前端 render.js 所需格式，按发布时间升序排列"""
     date = report.get("date", "")
     articles = []
+
+    # 建立 items 的 URL -> published_at 映射，用于旧报告信号缺失日期时回退
+    item_date_map = {}
+    for item in report.get("items", []):
+        url = item.get("url")
+        pub = item.get("published_at")
+        if url and pub:
+            item_date_map[url] = pub
 
     for idx, signal in enumerate(report.get("signals", [])):
         category = signal.get("category") or "AI"
@@ -97,18 +105,26 @@ def to_frontend_articles(report: dict) -> list[dict]:
             tags.append(source)
 
         impact = signal.get("impact") or 1
+        pub_date = (
+            signal.get("published_at")
+            or item_date_map.get(signal.get("url"), "")
+            or date
+        )
         articles.append({
             "idx": idx + 1,
             "title": signal.get("title") or signal.get("signal", ""),
             "tags": tags,
-            "date": date,
+            "date": pub_date,
             "desc": signal.get("insight") or signal.get("signal", ""),
             "hot": impact * 25,
             "impact": impact,
             "link": signal.get("url") or "#",
+            "published_at": pub_date,
         })
 
-    articles.sort(key=lambda x: x["impact"], reverse=True)
+    # 按发布时间升序（时间线从旧到新）
+    articles.sort(key=lambda x: x["published_at"] or "9999-99-99")
+
     # 重新编号 1..N
     for i, a in enumerate(articles, 1):
         a["idx"] = i

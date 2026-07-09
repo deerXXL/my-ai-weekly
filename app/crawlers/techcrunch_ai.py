@@ -10,7 +10,7 @@ URL = (
 )
 
 
-def fetch_techcrunch_ai():
+def fetch_techcrunch_ai(limit=50):
 
     items=[]
 
@@ -31,7 +31,7 @@ def fetch_techcrunch_ai():
 
         for h2 in soup.find_all(
             "h2",
-            limit=50
+            limit=limit
         ):
 
             title=h2.get_text(

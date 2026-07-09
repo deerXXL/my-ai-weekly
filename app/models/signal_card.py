@@ -8,7 +8,8 @@ class SignalCard:
     category: str
     impact: int
 
-    # 🔥 扩展字段（用于系统升级）
+    # 扩展字段（用于系统升级）
     source: str = ""
     title: str = ""
     url: str = ""
+    published_at: str = ""

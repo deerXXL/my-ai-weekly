@@ -43,9 +43,9 @@
   }
 
 
-  // 按 impact（hot）降序排列 — 时间线就成"信号强度瀑布"
+  // 按发布时间升序排列（时间线从旧到新）
   const sorted = [...list].sort(
-    (a, b) => (b.impact || b.hot / 25 || 0) - (a.impact || a.hot / 25 || 0)
+    (a, b) => (a.published_at || a.date || "9999-99-99").localeCompare(b.published_at || b.date || "9999-99-99")
   );
 
   sorted.forEach((item, idx) => {
@@ -153,7 +153,7 @@
           </a>
 
           <div class="text-inkLight dark:text-gray-400 text-sm mt-3">
-            发布日期：${item.date}
+            发布日期：${item.published_at || item.date || "—"}
           </div>
 
           <p class="text-inkMid dark:text-gray-300 line-clamp-2 my-4">
