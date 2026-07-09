@@ -7,7 +7,7 @@ from app.models.raw_item import RawItem
 URL = (
     "https://www.reddit.com/"
     "r/MachineLearning/top.json"
-    "?limit=20&t=week"
+    "?limit=50&t=month"  # 双周报告，拉取一个月内的热门确保覆盖
 )
 
 
@@ -100,4 +100,4 @@ def fetch_reddit_ml():
         )
 
 
-    return items[:10]
+    return items[:30]

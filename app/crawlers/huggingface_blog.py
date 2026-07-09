@@ -7,7 +7,7 @@ from app.models.raw_item import RawItem
 RSS_URL = "https://huggingface.co/blog/feed.xml"
 
 
-def fetch_huggingface_blog(limit=5):
+def fetch_huggingface_blog(limit=40):
     """
     获取 Hugging Face Blog 最新文章
     """

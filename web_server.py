@@ -71,7 +71,7 @@ def _run_collect(tid: str):
     try:
         _update_task(tid, progress=5, message="正在加载数据源…")
         from app.pipeline import run_pipeline
-        report = run_pipeline()
+        report = run_pipeline(days=14, mode="practical")
         n = len(report.signals or [])
         _update_task(
             tid,
@@ -207,6 +207,9 @@ def api_archive():
                 "file": file.name,
                 "date": file.stem.replace("weekly-", ""),
                 "title": data.get("title", ""),
+                "issue_number": data.get("issue_number", 0),
+                "period_start": data.get("period_start", ""),
+                "period_end": data.get("period_end", ""),
                 "signal_count": len(data.get("signals", [])),
                 "size_kb": round(file.stat().st_size / 1024, 1),
                 "mtime": file.stat().st_mtime,

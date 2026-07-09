@@ -32,7 +32,7 @@ def fetch_jiqizhixin():
 
         for a in soup.find_all(
             "a",
-            limit=30
+            limit=80   # 双周报告需要覆盖14天内容
         ):
 
             title=a.get_text(

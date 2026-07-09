@@ -6,6 +6,7 @@ let articleSource = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
   loadArchive();
+  loadMeta();
   try {
     const response = await fetch("/api/report");
 
@@ -70,7 +71,8 @@ async function loadArchive() {
 
     option.value = item.file;
 
-    option.textContent = item.date;
+    const issueLabel = item.issue_number ? `第${item.issue_number}期 · ` : "";
+    option.textContent = `${issueLabel}${item.date}`;
 
     select.appendChild(option);
 
@@ -120,6 +122,34 @@ async function loadArchive() {
     );
 
 
+  }
+}
+
+
+// ============================================================
+// 加载页面元信息（期号、统计周期等）
+// ============================================================
+async function loadMeta() {
+  try {
+    const res = await fetch("/api/meta");
+    const meta = await res.json();
+
+    const titleEl = document.getElementById("pageTitle");
+    const periodEl = document.getElementById("periodRange");
+
+    if (titleEl && meta.title) {
+      titleEl.textContent = meta.title;
+    }
+
+    if (periodEl && meta.period_start && meta.period_end) {
+      const start = meta.period_start.replace(/-/g, ".");
+      const end = meta.period_end.replace(/-/g, ".");
+      periodEl.textContent = `${start} \u2014 ${end}\uff08\u53cc\u5468\uff09`;
+    } else if (periodEl && meta.date) {
+      periodEl.textContent = meta.date;
+    }
+  } catch (e) {
+    console.warn("无法加载页面元信息:", e);
   }
 }
 

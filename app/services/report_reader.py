@@ -47,6 +47,10 @@ def load_latest_report() -> dict:
         "summary": report.get("summary", ""),
         "title": report.get("title", ""),
         "source_file": path.name,
+        "issue_number": report.get("issue_number", 0),
+        "period_start": report.get("period_start", ""),
+        "period_end": report.get("period_end", ""),
+        "total_sources": report.get("total_sources", 0),
         "articles": to_frontend_articles(report),
     }
 

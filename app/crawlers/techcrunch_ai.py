@@ -31,7 +31,7 @@ def fetch_techcrunch_ai():
 
         for h2 in soup.find_all(
             "h2",
-            limit=10
+            limit=50
         ):
 
             title=h2.get_text(

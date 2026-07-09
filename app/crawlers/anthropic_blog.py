@@ -8,7 +8,7 @@ from app.models.raw_item import RawItem
 URL = "https://www.anthropic.com/news"
 
 
-def fetch_anthropic_blog(limit=5):
+def fetch_anthropic_blog(limit=40):
     """
     抓取 Anthropic 官方博客
     """

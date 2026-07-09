@@ -26,6 +26,7 @@ def run_pipeline(days=14, mode="practical"):
     report = build_report(
         items=items,
         signals=signals,
+        days=days,
     )
 
     # ✅ 写文件:JSON 给前端/Markdown 给人看

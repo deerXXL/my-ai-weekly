@@ -31,7 +31,7 @@ def fetch_36kr_ai():
 
         for item in soup.find_all(
             "item",
-            limit=20
+            limit=50   # 双周报告需要覆盖14天内容
         ):
 
             title = item.title.text.strip()

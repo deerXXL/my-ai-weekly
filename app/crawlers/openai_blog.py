@@ -4,7 +4,7 @@ from datetime import datetime
 from app.models.raw_item import RawItem
 
 
-def fetch_openai_blog(limit=5):
+def fetch_openai_blog(limit=40):
     url = "https://openai.com/news/"
     headers = {"User-Agent": "Mozilla/5.0"}
 
