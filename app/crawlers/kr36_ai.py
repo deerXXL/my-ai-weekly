@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 from app.models.raw_item import RawItem
 
@@ -36,6 +37,15 @@ def fetch_36kr_ai():
             title = item.title.text.strip()
 
             link = item.link.text.strip()
+
+            pub_date = None
+            pub_date_tag = item.find("pubDate")
+            if pub_date_tag and pub_date_tag.text:
+                try:
+                    dt = datetime.strptime(pub_date_tag.text.strip(), "%a, %d %b %Y %H:%M:%S %z")
+                    pub_date = dt.strftime("%Y-%m-%d")
+                except ValueError:
+                    pass
 
 
             if not title:
@@ -76,7 +86,9 @@ def fetch_36kr_ai():
 
                     url=link,
 
-                    category="行业资讯"
+                    category="行业资讯",
+
+                    published_at=pub_date
 
                 )
 

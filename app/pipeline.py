@@ -5,10 +5,10 @@ from app.services.report_builder import build_report
 from app.services.file_writer import write_json, write_markdown
 
 
-def run_pipeline():
+def run_pipeline(days=14, mode="practical"):
     """Main AI daily report pipeline."""
     items = load_all_sources()
-    items = filter_items(items)
+    items = filter_items(items, days=days, mode=mode)
 
     print(f"Items after filtering: {len(items)}")
     print(f"Total items: {len(items)}")

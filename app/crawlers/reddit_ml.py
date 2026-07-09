@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 
 from app.models.raw_item import RawItem
 
@@ -54,6 +55,12 @@ def fetch_reddit_ml():
             )
 
 
+            created_utc = info.get("created_utc")
+            published_at = None
+            if created_utc:
+                published_at = datetime.fromtimestamp(created_utc).strftime("%Y-%m-%d")
+
+
             if not title:
                 continue
 
@@ -76,7 +83,9 @@ def fetch_reddit_ml():
 
                     url=url,
 
-                    category="社区讨论"
+                    category="社区讨论",
+
+                    published_at=published_at
 
                 )
 

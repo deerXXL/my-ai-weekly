@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 from app.models.raw_item import RawItem
 
@@ -57,6 +58,17 @@ def fetch_jiqizhixin():
                         + href
                     )
 
+                published_at = None
+                # 尝试从父级获取时间标签
+                parent = a.find_parent()
+                if parent:
+                    time_tag = parent.find("time")
+                    if time_tag and time_tag.get("datetime"):
+                        try:
+                            dt = datetime.fromisoformat(time_tag.get("datetime").replace("Z", "+00:00"))
+                            published_at = dt.strftime("%Y-%m-%d")
+                        except (ValueError, AttributeError):
+                            pass
 
                 items.append(
 
@@ -65,7 +77,8 @@ def fetch_jiqizhixin():
                         title=title,
                         description=title,
                         url=href,
-                        category="行业资讯"
+                        category="行业资讯",
+                        published_at=published_at
                     )
 
                 )

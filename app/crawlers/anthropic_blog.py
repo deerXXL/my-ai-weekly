@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 from app.models.raw_item import RawItem
 
@@ -38,12 +39,25 @@ def fetch_anthropic_blog(limit=5):
         if href.startswith("/"):
             href = "https://www.anthropic.com" + href
 
+        published_at = None
+        # 尝试从相邻元素获取日期
+        parent = a.find_parent()
+        if parent:
+            time_tag = parent.find("time")
+            if time_tag and time_tag.get("datetime"):
+                try:
+                    dt = datetime.fromisoformat(time_tag.get("datetime").replace("Z", "+00:00"))
+                    published_at = dt.strftime("%Y-%m-%d")
+                except (ValueError, AttributeError):
+                    pass
+
         items.append(
             RawItem(
                 source="Anthropic",
                 title=title,
                 description=title,
-                url=href
+                url=href,
+                published_at=published_at
             )
         )
 

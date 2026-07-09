@@ -10,6 +10,8 @@ OUTPUT_DIR = BASE_DIR / "output"
 
 LOG_FILE = BASE_DIR / "scheduler.log"
 
+REPORT_DAYS = 14  # 默认双周
+
 def log(msg):
 
     print(msg)
@@ -81,7 +83,7 @@ def need_generate():
     )
 
 
-    return days >= 14
+    return days >= REPORT_DAYS
 
 
 
@@ -97,7 +99,9 @@ def run_report():
             "python",
              str(
                 BASE_DIR / "generate_weekly.py"
-             )
+             ),
+             "--days",
+             str(REPORT_DAYS)
         ],
         capture_output=True,
         text=True
