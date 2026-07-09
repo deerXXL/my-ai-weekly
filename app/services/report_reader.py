@@ -42,14 +42,43 @@ def load_latest_report() -> dict:
     with open(path, "r", encoding="utf-8") as f:
         report = json.load(f)
 
+    # 如果JSON中没有新字段，从日期反推
+    from datetime import datetime, timedelta
+    import glob as _glob
+
+    date_str = report.get("date", "")
+    period_start = report.get("period_start", "")
+    period_end = report.get("period_end", "")
+
+    if (not period_start or not period_end) and date_str:
+        try:
+            d = datetime.strptime(date_str, "%Y-%m-%d")
+            period_start = period_start or (d - timedelta(days=14)).strftime("%Y-%m-%d")
+            period_end = period_end or date_str
+        except ValueError:
+            pass
+
+    # 如果没有issue_number，统计已有报告数量作为期号
+    issue_number = report.get("issue_number", 0)
+    if not issue_number:
+        weekly_files = [
+            p for p in OUTPUT_DIR.glob("weekly-*.json")
+            if WEEKLY_JSON_PATTERN.match(p.name)
+        ]
+        issue_number = len(weekly_files)
+
+    title = report.get("title", "")
+    if not title or title == "AI Daily Report":
+        title = f"AI双周产品周报 · 第{issue_number}期"
+
     return {
-        "date": report.get("date", ""),
+        "date": date_str,
         "summary": report.get("summary", ""),
-        "title": report.get("title", ""),
+        "title": title,
         "source_file": path.name,
-        "issue_number": report.get("issue_number", 0),
-        "period_start": report.get("period_start", ""),
-        "period_end": report.get("period_end", ""),
+        "issue_number": issue_number,
+        "period_start": period_start,
+        "period_end": period_end,
         "total_sources": report.get("total_sources", 0),
         "articles": to_frontend_articles(report),
     }

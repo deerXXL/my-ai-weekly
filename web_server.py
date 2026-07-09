@@ -198,18 +198,44 @@ def api_meta():
 @app.route("/api/archive")
 def api_archive():
     reports = []
-    for file in sorted(OUTPUT_DIR.glob("weekly-*.json"), reverse=True):
+    # 按日期升序编号（最旧的 = 第1期）
+    files = sorted(OUTPUT_DIR.glob("weekly-*.json"))
+    total = len(files)
+    for idx, file in enumerate(files, 1):
         try:
             import json
+            from datetime import datetime, timedelta
             with open(file, "r", encoding="utf-8") as f:
                 data = json.load(f)
+
+            date_str = file.stem.replace("weekly-", "")
+
+            # 如果JSON中没有period字段，从文件名日期反推双周区间
+            period_start = data.get("period_start", "")
+            period_end = data.get("period_end", "")
+            if not period_start or not period_end:
+                try:
+                    d = datetime.strptime(date_str, "%Y-%m-%d")
+                    period_start = period_start or (d - timedelta(days=14)).strftime("%Y-%m-%d")
+                    period_end = period_end or date_str
+                except ValueError:
+                    pass
+
+            # 如果没有issue_number，用反向编号（最新的是第N期）
+            issue_number = data.get("issue_number") or (total - idx + 1)
+
+            # 兼容旧标题
+            title = data.get("title", "")
+            if not title or title == "AI Daily Report":
+                title = f"AI双周产品周报 · 第{issue_number}期"
+
             reports.append({
                 "file": file.name,
-                "date": file.stem.replace("weekly-", ""),
-                "title": data.get("title", ""),
-                "issue_number": data.get("issue_number", 0),
-                "period_start": data.get("period_start", ""),
-                "period_end": data.get("period_end", ""),
+                "date": date_str,
+                "title": title,
+                "issue_number": issue_number,
+                "period_start": period_start,
+                "period_end": period_end,
                 "signal_count": len(data.get("signals", [])),
                 "size_kb": round(file.stat().st_size / 1024, 1),
                 "mtime": file.stat().st_mtime,
@@ -217,6 +243,8 @@ def api_archive():
         except Exception as exc:
             print("archive entry error:", file, exc)
 
+    # 降序返回（最新的在前）
+    reports.reverse()
     return jsonify(reports)
 
 

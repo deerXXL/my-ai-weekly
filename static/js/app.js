@@ -53,11 +53,12 @@ function fmtPeriod(start, end) {
   return `${start.replace(/-/g, ".")} — ${end.replace(/-/g, ".")}`;
 }
 
-// 格式化归档标签：第N期 · 06.25 — 07.09
+// 格式化归档标签：第N期 · 06.25 — 07.09（有日期则用区间，否则回退到单日期）
 function fmtArchiveLabel(item) {
   const issue = item.issue_number ? `第${item.issue_number}期 · ` : "";
   const period = fmtPeriod(item.period_start, item.period_end);
-  return `${issue}${period}`;
+  const display = period || item.date || "";
+  return `${issue}${display}`;
 }
 
 // 从归档项更新页面标题和统计周期
@@ -72,8 +73,9 @@ function updateMetaFromArchive(item) {
   }
 
   const period = fmtPeriod(item.period_start, item.period_end);
-  if (periodEl && period) {
-    periodEl.textContent = `${period}（双周）`;
+  const display = period || item.date || "";
+  if (periodEl && display) {
+    periodEl.textContent = period ? `${period}（双周）` : display;
   }
 }
 
