@@ -5,7 +5,6 @@ import { renderArticle, renderHot } from "./render.js";
 let articleSource = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
-  loadArchive();
   loadMeta();
   try {
     const response = await fetch("/api/report");
@@ -48,6 +47,36 @@ function bindSearch() {
   });
 }
 
+// 格式化双周区间显示：2026-06-25 → 2026.06.25
+function fmtPeriod(start, end) {
+  if (!start || !end) return "";
+  return `${start.replace(/-/g, ".")} — ${end.replace(/-/g, ".")}`;
+}
+
+// 格式化归档标签：第N期 · 06.25 — 07.09
+function fmtArchiveLabel(item) {
+  const issue = item.issue_number ? `第${item.issue_number}期 · ` : "";
+  const period = fmtPeriod(item.period_start, item.period_end);
+  return `${issue}${period}`;
+}
+
+// 从归档项更新页面标题和统计周期
+function updateMetaFromArchive(item) {
+  const titleEl = document.getElementById("pageTitle");
+  const periodEl = document.getElementById("periodRange");
+
+  if (titleEl && item.title) {
+    titleEl.textContent = item.title;
+  } else if (titleEl && item.issue_number) {
+    titleEl.textContent = `AI双周产品周报 · 第${item.issue_number}期`;
+  }
+
+  const period = fmtPeriod(item.period_start, item.period_end);
+  if (periodEl && period) {
+    periodEl.textContent = `${period}（双周）`;
+  }
+}
+
 async function loadArchive() {
 
   const select = document.getElementById("weekSelect");
@@ -72,7 +101,8 @@ async function loadArchive() {
     option.value = item.file;
 
     const issueLabel = item.issue_number ? `第${item.issue_number}期 · ` : "";
-    option.textContent = `${issueLabel}${item.date}`;
+    const periodStr = fmtPeriod(item.period_start, item.period_end);
+    option.textContent = `${issueLabel}${periodStr}`;
 
     select.appendChild(option);
 
@@ -81,8 +111,8 @@ async function loadArchive() {
 
   if (archive.length > 0) {
 
-    current.textContent =
-      archive[0].date;
+    current.textContent = fmtArchiveLabel(archive[0]);
+    updateMetaFromArchive(archive[0]);
     select.addEventListener(
       "change",
       async () => {
@@ -112,10 +142,12 @@ async function loadArchive() {
 
 
 
-        current.textContent =
-          select.options[
-          select.selectedIndex
-          ].text;
+        // 根据选中的归档项更新标题、统计周期、当前归档期
+        const selected = archive.find(a => a.file === file);
+        if (selected) {
+          current.textContent = fmtArchiveLabel(selected);
+          updateMetaFromArchive(selected);
+        }
 
 
       }

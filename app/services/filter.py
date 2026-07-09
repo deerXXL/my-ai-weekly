@@ -161,5 +161,5 @@ def filter_items(items, days=14, mode="practical"):
     )
 
 
-    # 保留前50（双周报告需要更多内容）
-    return result[:50]
+    # 保留前30条最有价值的资讯
+    return result[:30]
