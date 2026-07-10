@@ -1,47 +1,38 @@
-"""
-AI 周报 Web 服务。
-- /             首页
-- /api/report   读取最新（或指定）weekly JSON 的前端文章列表
-- /api/meta     元数据
-- /api/archive  历史归档列表
-- /api/collect  异步：跑 pipeline，生成最新周报
-- /api/task/<id>查询后台任务状态
-- /api/summarize 异步：批量重新生成所有 signal 的摘要
-- /api/export   生成完整 Markdown 周报并返回下载链接
-- /download/<file> 提供导出文件下载
-"""
+"""闪联AI周刊 Web 服务：HTML 预览、导出、静态资源。"""
 import threading
 import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Any, Dict
+from app.services.report_reader import to_frontend_articles
 
 from flask import (
-    Flask, Response, jsonify, render_template,
-    request, send_from_directory,
+    Flask,
+    Response,
+    jsonify,
+    request,
+    send_from_directory,
+    render_template,
+)
+from app.services.export_builder import (
+    build_export_html,
+    build_export_markdown,
+    load_latest_report_dict,
 )
 
-from app.services.report_reader import (
-    load_latest_report,
-    to_frontend_articles,
-    find_latest_report_path,
-)
+app = Flask(__name__)
 
-app = Flask(
-    __name__,
-    template_folder="templates",
-    static_folder="static",
-)
+
+TASKS = {}
+
+TASK_LOCK = threading.Lock()
+
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
 
-# ============================================================
-# 简易后台任务队列（内存版）
-# ============================================================
-TASKS: Dict[str, Dict[str, Any]] = {}
-TASK_LOCK = threading.Lock()
+BASE_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = BASE_DIR / "output"
 
 
 def _new_task(name: str) -> str:
@@ -71,7 +62,7 @@ def _run_collect(tid: str):
     try:
         _update_task(tid, progress=5, message="正在加载数据源…")
         from app.pipeline import run_pipeline
-        report = run_pipeline(days=14, mode="practical")
+        report = run_pipeline()
         n = len(report.signals or [])
         _update_task(
             tid,
@@ -186,13 +177,22 @@ def api_report():
             report = json.load(f)
         return jsonify(to_frontend_articles(report))
 
-    report = load_latest_report()
+    report = load_latest_report_dict()
+
+    if report is None:
+        return jsonify([])
+    
+    return jsonify(
+    report.get("articles", [])
+    )
     return jsonify(report.get("articles", []))
 
 
 @app.route("/api/meta")
 def api_meta():
-    return jsonify(load_latest_report())
+    return jsonify(
+    load_latest_report_dict() or {}
+    )
 
 
 @app.route("/api/archive")
@@ -284,21 +284,30 @@ def api_task(tid: str):
 @app.route("/api/export", methods=["POST", "GET"])
 def api_export():
     try:
-        from app.services.export_builder import (
-            build_export_markdown,
-            _load_latest,
-        )
-        report = _load_latest()
+        report = load_latest_report_dict()
         if report is None:
             return jsonify({
                 "status": "failed",
                 "message": "暂无可导出的周报数据，请先生成",
             }), 400
 
-        content = build_export_markdown(report)
-        date = report.get("date", "unknown")
+        fmt = request.args.get("format", "md").lower()
+        date = (report.get("generated_at") or "unknown")[:10]
 
-        # 直接以可下载响应返回 Markdown，避免磁盘写权限问题
+        if fmt == "html":
+            content = build_export_html(report)
+            return Response(
+                content,
+                mimetype="text/html; charset=utf-8",
+                headers={
+                    "Content-Disposition": (
+                        f'attachment; filename="weekly-{date}.html"; '
+                        f"filename*=UTF-8''weekly-{date}.html"
+                    ),
+                },
+            )
+
+        content = build_export_markdown(report)
         return Response(
             content,
             mimetype="text/markdown; charset=utf-8",
@@ -318,14 +327,14 @@ def api_export():
         }), 500
 
 
-@app.route("/download/<path:filename>")
-def download(filename: str):
-    return send_from_directory(
-        OUTPUT_DIR,
-        filename,
-        as_attachment=True,
-        download_name=filename,
-    )
+@app.route("/issues/<issue_id>/<path:filepath>")
+def serve_issue_files(issue_id: str, filepath: str):
+    if not issue_id.startswith("weekly-"):
+        return jsonify({"error": "invalid issue id"}), 404
+    root = OUTPUT_DIR / issue_id
+    if not root.is_dir():
+        return jsonify({"error": "issue not found"}), 404
+    return send_from_directory(root, filepath)
 
 
 if __name__ == "__main__":

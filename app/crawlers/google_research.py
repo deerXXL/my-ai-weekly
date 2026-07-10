@@ -2,101 +2,126 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+from app.crawlers._http_utils import DEFAULT_HEADERS
 from app.models.raw_item import RawItem
 
 
 URL = "https://research.google/blog/"
+BASE = "https://research.google"
 
 
-# Google Research 页面过滤关键词
-IGNORE_WORDS = [
-
-    "Skip",
-    "Explore",
-    "Research areas",
-    "Areas",
-    "Home",
-    "About",
-    "Careers",
-    "Contact",
-    "Subscribe",
-    "Privacy",
-    "Terms"
-
-]
+SKIP_TITLE_WORDS = (
+    "skip",
+    "explore",
+    "research areas",
+    "home",
+    "about",
+    "careers",
+    "contact",
+    "subscribe",
+    "privacy",
+    "terms",
+    "专区",
+    "research area",
+)
 
 
 def fetch_google_research():
 
-    items=[]
+    print("Fetching Google Research blog...")
+
+    items = []
+    seen = set()
+
 
     try:
 
-        html = requests.get(
+        response = requests.get(
             URL,
-            timeout=10
-        ).text
-
+            headers=DEFAULT_HEADERS,
+            timeout=15
+        )
 
         soup = BeautifulSoup(
-            html,
+            response.text,
             "html.parser"
         )
 
 
-        for a in soup.find_all(
-            "a",
-            limit=80   # 双周报告需要覆盖14天内容
-        ):
+        for anchor in soup.find_all("a", href=True):
 
-            title = a.get_text(strip=True)
+            href = anchor["href"].strip()
+
+            title = anchor.get_text(strip=True)
 
 
+            # 标题为空
             if not title:
                 continue
 
 
-            # 去除导航内容
+            # 标题太短
+            if len(title) < 10:
+                continue
+
+
+            # 导航词过滤
             if any(
-                word.lower() in title.lower()
-                for word in IGNORE_WORDS
+                word in title.lower()
+                for word in SKIP_TITLE_WORDS
             ):
                 continue
 
 
-            # 太短的一般不是文章
-            if len(title) < 15:
+            # 只保留文章链接
+            if "/blog/" not in href:
                 continue
 
 
-            href = a.get("href")
-
-
-            if not href:
-                continue
-
-
+            # 拼接绝对地址
             if href.startswith("/"):
+                href = BASE + href
 
-                href = (
-                    "https://research.google"
-                    + href
-                )
+
+            # 去重
+            if href in seen:
+                continue
+
 
             published_at = None
-            # 尝试从父级获取时间标签
-            parent = a.find_parent()
+
+
+            # 尝试获取发布时间
+            parent = anchor.find_parent()
+
             if parent:
+
                 time_tag = parent.find("time")
+
                 if time_tag and time_tag.get("datetime"):
+
                     try:
-                        dt = datetime.fromisoformat(time_tag.get("datetime").replace("Z", "+00:00"))
-                        published_at = dt.strftime("%Y-%m-%d")
-                    except (ValueError, AttributeError):
+
+                        dt = datetime.fromisoformat(
+                            time_tag.get("datetime")
+                            .replace("Z", "+00:00")
+                        )
+
+                        published_at = dt.strftime(
+                            "%Y-%m-%d"
+                        )
+
+                    except (
+                        ValueError,
+                        AttributeError
+                    ):
                         pass
 
-            items.append(
 
+            seen.add(href)
+
+
+            items.append(
                 RawItem(
                     title=title,
                     url=href,
@@ -105,16 +130,22 @@ def fetch_google_research():
                     category="研究",
                     published_at=published_at
                 )
-
             )
 
 
-    except Exception as e:
+            if len(items) >= 10:
+                break
+
+
+    except Exception as exc:
 
         print(
-            "Google Research error:",
-            e
+            f"  Google Research error: {exc}"
         )
 
 
-    return items[:10]
+    print(
+        f"  Google Research: {len(items)} 条"
+    )
+
+    return items

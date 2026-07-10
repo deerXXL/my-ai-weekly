@@ -1,167 +1,292 @@
-"""
-为"生成完整周报文档"按钮服务。
-读取 weekly JSON，生成排版精美、可直接发给团队的 Markdown。
-"""
-from collections import defaultdict
-from datetime import datetime
-from pathlib import Path
-
+"""闪联AI周刊 Markdown / HTML 渲染与导出。"""
+from collections import OrderedDict
+from html import escape
 import json
+import re
+
+from app.models.daily_report import WeeklyNewsletter
+from app.services.issue_paths import find_latest_newsletter_json, issue_name
+from config import NewsletterConfig, load_newsletter_config
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-OUTPUT_DIR = BASE_DIR / "output"
-
-
-CATEGORY_LABELS = {
-    "大模型": "大模型动态",
-    "产品更新": "产品更新",
-    "行业报告": "行业报告",
-    "多模态": "多模态",
-    "ToB": "ToB 与企业服务",
-    "办公AI": "办公 AI",
-    "产品评测": "产品评测",
-    "开源项目": "开源项目",
-    "AI": "其他",
-    "Unknown": "其他",
-}
-
-CATEGORY_ORDER = [
-    "大模型", "产品更新", "行业报告", "多模态",
-    "ToB", "办公AI", "产品评测", "开源项目", "AI", "Unknown",
-]
-
-
-def _load_latest() -> dict | None:
-    latest = OUTPUT_DIR / "latest.json"
-    target = latest if latest.exists() else None
-
-    if target is None:
-        candidates = sorted(OUTPUT_DIR.glob("weekly-*.json"), reverse=True)
-        target = candidates[0] if candidates else None
-
+def load_latest_report_dict() -> dict | None:
+    target = find_latest_newsletter_json()
     if target is None or not target.exists():
         return None
-
     with open(target, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def build_export_markdown(report: dict) -> str:
-    date = report.get("date") or datetime.now().strftime("%Y-%m-%d")
-    title = report.get("title") or "AI 双周产品周报"
-    signals = report.get("signals", [])
+def _issue_slug(newsletter: WeeklyNewsletter) -> str:
+    date_tag = newsletter.date or (newsletter.generated_at[:10] if newsletter.generated_at else "")
+    return issue_name(date_tag)
 
-    # 按 category 分组
-    grouped = defaultdict(list)
-    for s in signals:
-        cat = s.get("category") or "AI"
-        grouped[cat].append(s)
 
-    # 组内按 impact 降序
-    for cat in grouped:
-        grouped[cat].sort(key=lambda x: x.get("impact", 0), reverse=True)
+LIST_INDENT = "    "
 
-    lines = []
-    lines.append(f"# {title}（{date}）")
-    lines.append("")
-    lines.append(f"> 本期共收录 **{len(signals)}** 条 AI 行业信号，"
-                 f"统计周期：{date}（双周）")
-    lines.append("")
-    lines.append(f"**编辑**：产品资讯归档组  ")
-    lines.append(f"**生成时间**：{report.get('generated_at') or datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  ")
-    lines.append(f"**编辑整理**：WorkBuddy 协助")
-    lines.append("")
 
-    summary = report.get("summary", "").strip()
-    if summary:
-        lines.append("## 本期概览")
-        lines.append("")
-        lines.append(summary)
-        lines.append("")
+def validate_markdown_structure(md: str) -> list[str]:
+    """校验 Markdown 结构，返回问题列表（空=通过）。"""
+    issues: list[str] = []
+    if "## 🧪 实测体验" in md:
+        issues.append("不应包含独立实测体验栏目")
+    if re.search(r"^>\s*\*\*Prompt", md, re.M):
+        issues.append("不应包含实测 Prompt 引用块")
 
-    # 分类小节
-    lines.append("## 分类速览")
-    lines.append("")
-    for cat in CATEGORY_ORDER:
-        if cat in grouped:
-            lines.append(f"- **{CATEGORY_LABELS.get(cat, cat)}**：{len(grouped[cat])} 条")
-    lines.append("")
-
-    # 详细正文：按分类、热度排序
-    lines.append("## 资讯详情")
-    lines.append("")
-    for cat in CATEGORY_ORDER:
-        items = grouped.get(cat)
-        if not items:
+    in_trends = False
+    for i, line in enumerate(md.splitlines(), start=1):
+        if line.startswith("### ☀️ 核心趋势"):
+            in_trends = True
             continue
-        lines.append(f"### {CATEGORY_LABELS.get(cat, cat)}")
-        lines.append("")
-        for i, s in enumerate(items, 1):
-            t = s.get("title") or s.get("signal") or "(无标题)"
-            url = s.get("url") or "#"
-            source = s.get("source") or ""
-            impact = s.get("impact", 1)
-            insight = s.get("insight") or s.get("signal") or ""
-            lines.append(f"#### {i}. {t}")
+        if in_trends and line.startswith("### "):
+            in_trends = False
+        if in_trends and re.match(r"^\d+\.\s+\*\*", line):
+            if i >= len(md.splitlines()):
+                continue
+            next_lines = md.splitlines()[i : i + 3]
+            body_lines = [ln for ln in next_lines if ln.strip() and not ln.startswith("#")]
+            if body_lines and not body_lines[0].startswith(LIST_INDENT):
+                issues.append(f"第{i+1}行：趋势正文缺少列表缩进")
+
+    if "### 🔮 可行性思考" in md:
+        chunk = md.split("### 🔮 可行性思考", 1)[1]
+        for match in re.finditer(r"^(\d+\.\s+\*\*.+\*\*)\n\n(- )", chunk, re.M):
+            issues.append(f"可行性条目 '{match.group(1)[:20]}' 的子列表缺少缩进")
+
+    return issues
+
+
+def _render_overview(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> list[str]:
+    ov = newsletter.overview
+    return [
+        f"# {newsletter.brand_name}",
+        "",
+        "---",
+        "",
+        f"## {cfg.overview.icon} {cfg.overview.label}",
+        "",
+        f"**时间范围：** {ov.date_start} - {ov.date_end}",
+        "",
+        f"**本期编辑：** {ov.editor}",
+        "",
+        f"**核心摘要：** {ov.core_summary.strip()}",
+        "",
+    ]
+
+
+def _resolve_newsletter(report: dict | WeeklyNewsletter | None) -> WeeklyNewsletter:
+    if isinstance(report, WeeklyNewsletter):
+        return report
+    if isinstance(report, dict):
+        return WeeklyNewsletter.from_dict(report)
+    raw = load_latest_report_dict()
+    if raw is None:
+        raise FileNotFoundError("暂无可导出的周报数据")
+    return WeeklyNewsletter.from_dict(raw)
+
+
+def _image_src_for_html(image_url: str, issue_slug: str) -> str:
+    """本地图片用 /issues/{issue_slug}/images/... 供 Flask 静态路由。"""
+    if not image_url:
+        return ""
+    if image_url.startswith("http://") or image_url.startswith("https://"):
+        return image_url
+    if image_url.startswith("images/"):
+        return f"/issues/{issue_slug}/{image_url}"
+    return "/" + image_url.lstrip("/")
+
+
+def _group_industry_by_date(newsletter: WeeklyNewsletter) -> OrderedDict[str, list]:
+    grouped: OrderedDict[str, list] = OrderedDict()
+    for item in newsletter.industry_news:
+        grouped.setdefault(item.date_label, []).append(item)
+    return grouped
+
+
+def _render_industry(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> list[str]:
+    grouped = _group_industry_by_date(newsletter)
+    if not grouped:
+        return []
+    lines = [f"## {cfg.industry.icon} {cfg.industry.label}", ""]
+    for date_label, items in grouped.items():
+        lines.extend([f"### {date_label}", ""])
+        for item in items:
+            if item.image_url:
+                lines.extend([f"![{item.title}]({item.image_url})", ""])
+            lines.append(f"- **{item.title}**")
             lines.append("")
-            lines.append(f"- **来源**：{source}　**热度**：{'★' * max(1, int(impact))}（{impact}/5）")
-            if url and url != "#":
-                lines.append(f"- **原文**：[点击阅读]({url})")
-            if insight:
-                lines.append(f"- **摘要**：{insight}")
+            lines.append(f"{LIST_INDENT}{item.summary.strip()}")
+            if item.usage_note.strip():
+                lines.append("")
+                lines.append(
+                    f"{LIST_INDENT}**使用说明：** {item.usage_note.strip()}"
+                )
             lines.append("")
-
-    # 来源统计
-    sources = defaultdict(int)
-    for s in signals:
-        sources[s.get("source") or "未知"] += 1
-    if sources:
-        lines.append("## 来源统计")
         lines.append("")
-        for src, n in sorted(sources.items(), key=lambda x: -x[1]):
-            lines.append(f"- {src}：{n} 条")
-        lines.append("")
-
-    lines.append("---")
-    lines.append("")
-    lines.append("*本报告由 WorkBuddy 协作生成，原始数据来自 GitHub Trending、"
-                 "OpenAI Blog、HuggingFace、Google Research、TechCrunch、VentureBeat、"
-                 "机器之心、36 氪、Reddit ML 等公开渠道。*")
-    lines.append("")
-
-    return "\n".join(lines)
+    return lines
 
 
-def export_latest_markdown() -> Path | None:
-    """
-    生成最新一期完整 Markdown 周报，返回文件路径。
-    文件名: weekly-日期-export.md
-    """
-    report = _load_latest()
-    if report is None:
-        return None
+def _render_tech_summary(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> list[str]:
+    tech = newsletter.tech_summary
+    if tech is None:
+        return []
+    lines = [
+        f"## {cfg.tech_summary_icon} {cfg.tech_summary_label_prefix}：{tech.title_suffix}",
+        "",
+        "### ☀️ 核心趋势",
+        "",
+    ]
+    for trend in tech.trends:
+        lines.extend([
+            f"{trend.index}. **{trend.title}**",
+            "",
+            f"{LIST_INDENT}{trend.body.strip()}",
+            "",
+        ])
+    if tech.feasibility:
+        lines.extend(["### 🔮 可行性思考", ""])
+        for group in tech.feasibility:
+            lines.append(f"{group.index}. **{group.title}**")
+            lines.append("")
+            for bullet in group.bullets:
+                lines.append(f"{LIST_INDENT}- {bullet.strip()}")
+            lines.append("")
+    return lines
 
-    date = report.get("date") or datetime.now().strftime("%Y-%m-%d")
-    OUTPUT_DIR.mkdir(exist_ok=True)
-    out_path = OUTPUT_DIR / f"weekly-{date}-export.md"
 
-    content = build_export_markdown(report)
-    # Windows 上同名文件可能被 AV / Search Indexer 短暂持锁，
-    # 先尝试移除再写；失败则用临时文件 rename
-    try:
-        if out_path.exists():
-            out_path.unlink()
-    except OSError:
-        pass
-    tmp_path = out_path.with_suffix(".md.tmp")
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    try:
-        tmp_path.replace(out_path)
-    except OSError:
-        # 最后兜底：直接覆盖
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write(content)
-        tmp_path.unlink(missing_ok=True)
-    return out_path
+def build_export_markdown(report: dict | WeeklyNewsletter | None = None) -> str:
+    newsletter = _resolve_newsletter(report)
+    cfg = load_newsletter_config()
+    lines: list[str] = []
+    lines.extend(_render_overview(newsletter, cfg))
+    lines.extend(_render_industry(newsletter, cfg))
+    lines.extend(_render_tech_summary(newsletter, cfg))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _format_bullet_html(text: str) -> str:
+    escaped = escape(text)
+    return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
+
+
+def build_export_html(report: dict | WeeklyNewsletter | None = None) -> str:
+    newsletter = _resolve_newsletter(report)
+    cfg = load_newsletter_config()
+    ov = newsletter.overview
+    issue_slug = _issue_slug(newsletter)
+    grouped = _group_industry_by_date(newsletter)
+
+    industry_html = []
+    for date_label, items in grouped.items():
+        industry_html.append(f'<h3 class="date-label">{escape(date_label)}</h3>')
+        for item in items:
+            img_html = ""
+            if item.image_url:
+                src = _image_src_for_html(item.image_url, issue_slug)
+                img_html = (
+                    f'<img class="news-image" src="{escape(src)}" '
+                    f'alt="{escape(item.title)}" loading="lazy">'
+                )
+            usage_html = ""
+            if item.usage_note.strip():
+                usage_html = (
+                    f'<p class="news-usage"><strong>使用说明：</strong>'
+                    f"{escape(item.usage_note.strip())}</p>"
+                )
+            industry_html.append(
+                f'<div class="news-item">'
+                f"{img_html}"
+                f'<p class="news-title">• <strong>{escape(item.title)}</strong></p>'
+                f'<p class="news-summary">{escape(item.summary)}</p>'
+                f"{usage_html}"
+                f"</div>"
+            )
+
+    trends_html = []
+    tech = newsletter.tech_summary
+    if tech:
+        for trend in tech.trends:
+            trends_html.append(
+                f'<div class="trend-item">'
+                f"<p class=\"trend-heading\"><strong>{trend.index}. "
+                f"{escape(trend.title)}</strong></p>"
+                f'<p class="trend-body">{escape(trend.body)}</p>'
+                f"</div>"
+            )
+
+    feasibility_html = []
+    if tech and tech.feasibility:
+        for group in tech.feasibility:
+            bullets = "".join(
+                f"<li>{_format_bullet_html(b)}</li>" for b in group.bullets
+            )
+            feasibility_html.append(
+                f'<div class="trend-item">'
+                f"<p class=\"trend-heading\"><strong>{group.index}. "
+                f"{escape(group.title)}</strong></p>"
+                f"<ul class=\"feasibility-list\">{bullets}</ul>"
+                f"</div>"
+            )
+
+    tech_block = ""
+    if tech:
+        tech_block = f"""
+<section>
+  <h2>{cfg.tech_summary_icon} {cfg.tech_summary_label_prefix}：{escape(tech.title_suffix)}</h2>
+  <h3>☀️ 核心趋势</h3>
+  {''.join(trends_html)}
+  <h3>🔮 可行性思考</h3>
+  {''.join(feasibility_html)}
+</section>
+"""
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{escape(newsletter.brand_name)}</title>
+<style>
+  body {{
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 720px; margin: 0 auto; padding: 32px 24px;
+    color: #222; line-height: 1.7; background: #fff;
+  }}
+  h1 {{ text-align: center; font-size: 28px; margin-bottom: 8px; }}
+  hr {{ border: none; border-top: 1px solid #333; margin: 16px 0 24px; }}
+  h2 {{ font-size: 18px; margin-top: 32px; }}
+  h3 {{ font-size: 15px; margin-top: 20px; }}
+  h3.date-label {{ color: #007bff; font-weight: 600; }}
+  .meta p {{ margin: 6px 0; }}
+  .news-item {{ margin-bottom: 20px; }}
+  .news-image {{ max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; }}
+  .news-title {{ margin-bottom: 6px; font-weight: 600; }}
+  .news-summary {{ margin: 0 0 8px 16px; color: #444; }}
+  .news-usage {{ margin: 0 0 0 16px; color: #555; font-size: 14px; }}
+  .trend-item {{ margin-bottom: 20px; }}
+  .trend-heading {{ margin-bottom: 6px; }}
+  .trend-body {{ margin: 0 0 0 16px; color: #444; }}
+  .feasibility-list {{ margin: 4px 0 0 16px; padding-left: 20px; }}
+  ul {{ padding-left: 20px; }}
+  a {{ color: #007bff; }}
+</style>
+</head>
+<body>
+  <h1>{escape(newsletter.brand_name)}</h1>
+  <hr>
+  <section>
+    <h2>{cfg.overview.icon} {cfg.overview.label}</h2>
+    <div class="meta">
+      <p><strong>时间范围：</strong>{escape(ov.date_start)} - {escape(ov.date_end)}</p>
+      <p><strong>本期编辑：</strong>{escape(ov.editor)}</p>
+      <p><strong>核心摘要：</strong>{escape(ov.core_summary)}</p>
+    </div>
+  </section>
+  <section>
+    <h2>{cfg.industry.icon} {cfg.industry.label}</h2>
+    {''.join(industry_html)}
+  </section>
+  {tech_block}
+</body>
+</html>
+"""

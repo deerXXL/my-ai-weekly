@@ -1,68 +1,67 @@
 from datetime import datetime, timedelta
 
 
+DOMESTIC_SOURCES = {
+    "AI工具集",
+    "AIbase",
+    "XixAI",
+}
+
+
+SOURCE_WEIGHT = {
+    "OpenAI": 10,
+    "Anthropic": 10,
+    "HuggingFace": 9,
+    "Google Research": 9,
+    "TechCrunch": 8,
+    "VentureBeat": 8,
+    "AI工具集": 10,
+    "AIbase": 10,
+    "XixAI": 9,
+    "Reddit": 5,
+    "GitHub": 6,
+}
+
+
+KEYWORDS = [
+    "AI",
+    "LLM",
+    "Agent",
+    "模型",
+    "GPT",
+    "Claude",
+    "Gemma",
+    "机器人",
+    "多模态",
+    "大模型",
+    "智能体",
+]
+
+
 def filter_items(items, days=14, mode="practical"):
     """
     AI资讯过滤层
-    
+
     Args:
-        items: RawItem列表
-        days: 最近N天内的资讯（默认14天）
-        mode: 日期过滤模式
-              - "strict": 保守模式，没有日期的直接丢弃
-              - "practical": 实用模式，没有日期的保留但降权（默认）
+        items:
+            RawItem列表
+
+        days:
+            最近多少天资讯
+
+        mode:
+            strict:
+                没有日期直接丢弃
+
+            practical:
+                没有日期保留但降权
     """
 
     seen = set()
     result = []
 
-    # 来源权重
-    source_weight = {
-
-    "OpenAI":10,
-
-    "Anthropic":10,
-
-    "HuggingFace":9,
-
-    "Google Research":9,
-
-
-    "TechCrunch":8,
-
-    "VentureBeat":8,
-
-
-    "机器之心":7,
-
-    "36氪":7,
-
-
-    "Reddit":5,
-
-
-    "GitHub":6,
-
-}
-
-
-    keywords = [
-
-        "AI",
-        "LLM",
-        "Agent",
-        "模型",
-        "GPT",
-        "Claude",
-        "Gemma",
-        "机器人",
-        "多模态",
-        "大模型",
-        "智能体"
-
-    ]
-
     cutoff_date = datetime.now() - timedelta(days=days)
+
 
     for item in items:
 
@@ -74,6 +73,7 @@ def filter_items(items, days=14, mode="practical"):
         title = item.title.strip()
 
 
+        # 标题过短
         if len(title) < 5:
             continue
 
@@ -86,56 +86,75 @@ def filter_items(items, days=14, mode="practical"):
 
 
 
-        # 计算相关性
-
-        score = 0
-
-
+        # --------------------
         # 来源评分
+        # --------------------
 
-        score += source_weight.get(
+        score = SOURCE_WEIGHT.get(
             item.source,
             3
         )
 
 
-        # 标题关键词
-
-        for kw in keywords:
+        for kw in KEYWORDS:
 
             if kw.lower() in title.lower():
-
                 score += 2
 
 
-        # 日期过滤（实用模式）
+
+        # --------------------
+        # 日期过滤
+        # --------------------
+
         has_date = False
         is_within_range = False
 
+
         if item.published_at:
+
             try:
-                pub_date = datetime.strptime(item.published_at, "%Y-%m-%d")
+
+                pub_date = datetime.strptime(
+                    item.published_at,
+                    "%Y-%m-%d"
+                )
+
                 has_date = True
+
+
                 if pub_date >= cutoff_date:
                     is_within_range = True
-            except (ValueError, TypeError):
+
+
+            except (
+                ValueError,
+                TypeError
+            ):
                 pass
 
+
+
         if has_date:
-            if is_within_range:
-                # 日期在范围内，正常保留
-                pass
-            else:
-                # 日期超期，直接丢弃
+
+            # 超过时间范围
+            if not is_within_range:
                 continue
+
+
         else:
-            # 没有日期
+
+            # 没日期
             if mode == "strict":
-                # 保守模式：没有日期直接丢弃
+
                 continue
+
             else:
-                # 实用模式：保留但降权，避免漏掉重要新闻
+
+                # 实用模式降权
                 score -= 3
+
+
 
         item.extra = item.extra or {}
 
@@ -146,20 +165,87 @@ def filter_items(items, days=14, mode="practical"):
 
 
 
-    # 高质量排序
+    # --------------------
+    # 总排序
+    # --------------------
 
     result.sort(
-
-        key=lambda x:
-        x.extra.get(
+        key=lambda x: x.extra.get(
             "score",
             0
         ),
-
         reverse=True
-
     )
 
 
-    # 保留前30条最有价值的资讯
-    return result[:30]
+
+    # --------------------
+    # 国内源保底
+    # --------------------
+
+    per_source_limit = 5
+
+    picked_domestic = []
+
+    seen_urls = set()
+
+
+
+    for source in DOMESTIC_SOURCES:
+
+        source_items = [
+            x for x in result
+            if x.source == source
+        ]
+
+
+        for item in source_items[:per_source_limit]:
+
+            if item.url not in seen_urls:
+
+                picked_domestic.append(item)
+
+                seen_urls.add(item.url)
+
+
+
+    # --------------------
+    # 海外源补足
+    # --------------------
+
+    overseas = [
+        x for x in result
+        if x.source not in DOMESTIC_SOURCES
+    ]
+
+
+    picked_overseas = [
+        x for x in overseas
+        if x.url not in seen_urls
+    ][
+        :max(
+            0,
+            45 - len(picked_domestic)
+        )
+    ]
+
+
+
+    merged = (
+        picked_domestic
+        +
+        picked_overseas
+    )
+
+
+
+    merged.sort(
+        key=lambda x: x.extra.get(
+            "score",
+            0
+        ),
+        reverse=True
+    )
+
+
+    return merged[:45]

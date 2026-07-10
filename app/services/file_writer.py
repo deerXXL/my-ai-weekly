@@ -1,77 +1,112 @@
 import json
-import shutil
-import os
-from dataclasses import asdict
 from pathlib import Path
 
+from app.models.daily_report import WeeklyNewsletter
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+from app.services.export_builder import (
+    build_export_html,
+    build_export_markdown,
+)
 
-OUTPUT_DIR = BASE_DIR / "output"
-
-
-def write_markdown(report):
-    """Write a Markdown report."""
-    os.makedirs("output", exist_ok=True)
-
-    filename = f"output/weekly-{report.date}.md"
-
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(f"# {report.title}\n\n")
-        f.write(f"**生成日期：** {report.date}\n\n")
-        if report.issue_number:
-            f.write(f"**期数：** 第{report.issue_number}期\n\n")
-        if report.period_start and report.period_end:
-            f.write(f"**统计周期：** {report.period_start} — {report.period_end}（双周）\n\n")
-        if report.total_sources:
-            f.write(f"**数据源：** {report.total_sources} 个\n\n")
-        f.write("## 本期摘要\n\n")
-        f.write(report.summary + "\n\n")
-        f.write("## AI 信号\n\n")
-
-        for i, signal in enumerate(report.signals, 1):
-            f.write(f"### {i}. {signal.title}\n")
-            f.write(f"- Signal: {signal.signal}\n")
-            f.write(f"- Insight: {signal.insight}\n")
-            f.write(f"- Category: {signal.category}\n")
-            f.write(f"- Impact: {signal.impact}\n")
-            f.write(f"- URL: {signal.url}\n\n")
-
-    print(f"Markdown generated: {filename}")
+from app.services.issue_paths import (
+    NEWSLETTER_HTML,
+    NEWSLETTER_JSON,
+    NEWSLETTER_MD,
+    ensure_issue_dir,
+    set_latest_issue,
+)
 
 
-def write_json(report):
-    """Write JSON for Web/API/Notion consumers."""
 
-    OUTPUT_DIR.mkdir(
-        exist_ok=True
+def _target_dir(newsletter: WeeklyNewsletter) -> Path:
+    """
+    获取当前报告保存目录
+    """
+    date_tag = newsletter.date or newsletter.generated_at[:10]
+
+    return ensure_issue_dir(date_tag)
+
+
+
+def write_html(newsletter: WeeklyNewsletter) -> Path:
+    """
+    输出 HTML 文件
+    """
+
+    folder = _target_dir(newsletter)
+
+    path = folder / NEWSLETTER_HTML
+
+
+    path.write_text(
+        build_export_html(newsletter),
+        encoding="utf-8"
     )
 
-    filename = OUTPUT_DIR / f"weekly-{report.date}.json"
+
+    set_latest_issue(
+        newsletter.date or newsletter.generated_at[:10]
+    )
+
+
+    print(
+        f"HTML generated: {path}"
+    )
+
+    return path
+
+
+
+def write_markdown(newsletter: WeeklyNewsletter) -> Path:
+    """
+    输出 Markdown 文件
+    """
+
+    folder = _target_dir(newsletter)
+
+    path = folder / NEWSLETTER_MD
+
+
+    path.write_text(
+        build_export_markdown(newsletter),
+        encoding="utf-8"
+    )
+
+
+    print(
+        f"Markdown generated: {path}"
+    )
+
+    return path
+
+
+
+def write_json(newsletter: WeeklyNewsletter) -> Path:
+    """
+    输出 JSON 文件
+    """
+
+    folder = _target_dir(newsletter)
+
+    path = folder / NEWSLETTER_JSON
 
 
     with open(
-        filename,
+        path,
         "w",
         encoding="utf-8"
     ) as f:
 
         json.dump(
-            asdict(report),
+            newsletter.to_dict(),
             f,
             ensure_ascii=False,
-            indent=4,
+            indent=2
         )
 
 
-    # 更新 latest.json
-
-    shutil.copy(
-        filename,
-        OUTPUT_DIR / "latest.json"
-    )
-
-
     print(
-        f"JSON generated: {filename}"
+        f"JSON generated: {path}"
     )
+
+    return path
