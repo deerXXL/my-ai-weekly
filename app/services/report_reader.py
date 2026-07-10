@@ -111,42 +111,65 @@ def _extract_date_from_text(text: str) -> str:
 
 
 def to_frontend_articles(report: dict) -> list[dict]:
-    """将流水线 signals 转为前端 render.js 所需格式，按发布时间升序排列"""
+    """将报告数据转为前端 render.js 所需格式，按发布时间升序排列。
+
+    兼容两种格式：
+    - 旧格式：report["signals"] = [{title, signal, insight, category, impact, source, url, published_at}]
+    - 新格式：report["industry_news"] = [{date_label, title, summary, url, image_url, usage_note}]
+    """
     articles = []
 
-    # 建立 items 的 URL -> published_at 映射，用于旧报告信号缺失日期时回退
-    item_date_map = {}
-    for item in report.get("items", []):
-        url = item.get("url")
-        pub = item.get("published_at")
-        if url and pub:
-            item_date_map[url] = pub
+    # === 旧格式：signals ===
+    if report.get("signals"):
+        # 建立 items 的 URL -> published_at 映射，用于旧报告信号缺失日期时回退
+        item_date_map = {}
+        for item in report.get("items", []):
+            url = item.get("url")
+            pub = item.get("published_at")
+            if url and pub:
+                item_date_map[url] = pub
 
-    for idx, signal in enumerate(report.get("signals", [])):
-        category = signal.get("category") or "AI"
-        source = signal.get("source") or ""
-        tags = [category]
-        if source:
-            tags.append(source)
+        for idx, signal in enumerate(report["signals"]):
+            category = signal.get("category") or "AI"
+            source = signal.get("source") or ""
+            tags = [category]
+            if source:
+                tags.append(source)
 
-        impact = signal.get("impact") or 1
-        pub_date = (
-            signal.get("published_at")
-            or item_date_map.get(signal.get("url"), "")
-            or _extract_date_from_text(signal.get("title", ""))
-            or ""
-        )
-        articles.append({
-            "idx": idx + 1,
-            "title": signal.get("title") or signal.get("signal", ""),
-            "tags": tags,
-            "date": pub_date,
-            "desc": signal.get("insight") or signal.get("signal", ""),
-            "hot": impact * 25,
-            "impact": impact,
-            "link": signal.get("url") or "#",
-            "published_at": pub_date,
-        })
+            impact = signal.get("impact") or 1
+            pub_date = (
+                signal.get("published_at")
+                or item_date_map.get(signal.get("url"), "")
+                or _extract_date_from_text(signal.get("title", ""))
+                or ""
+            )
+            articles.append({
+                "idx": idx + 1,
+                "title": signal.get("title") or signal.get("signal", ""),
+                "tags": tags,
+                "date": pub_date,
+                "desc": signal.get("insight") or signal.get("signal", ""),
+                "hot": impact * 25,
+                "impact": impact,
+                "link": signal.get("url") or "#",
+                "published_at": pub_date,
+            })
+
+    # === 新格式：industry_news ===
+    elif report.get("industry_news"):
+        for idx, item in enumerate(report["industry_news"]):
+            pub_date = item.get("date_label") or ""
+            articles.append({
+                "idx": idx + 1,
+                "title": item.get("title", ""),
+                "tags": ["AI资讯"],
+                "date": pub_date,
+                "desc": item.get("summary", ""),
+                "hot": 50,
+                "impact": 2,
+                "link": item.get("url") or "#",
+                "published_at": pub_date,
+            })
 
     # 按发布时间升序（时间线从旧到新）
     articles.sort(key=lambda x: x["published_at"] or "9999-99-99")

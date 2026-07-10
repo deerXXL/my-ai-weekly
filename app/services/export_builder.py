@@ -3,18 +3,69 @@ from collections import OrderedDict
 from html import escape
 import json
 import re
+from pathlib import Path
 
 from app.models.daily_report import WeeklyNewsletter
-from app.services.issue_paths import find_latest_newsletter_json, issue_name
+from app.services.issue_paths import find_latest_newsletter_json, issue_name, OUTPUT_DIR
 from config import NewsletterConfig, load_newsletter_config
+
+_REPORT_OUTPUT_DIR = OUTPUT_DIR
+
+
+def _find_any_latest_report_path() -> Path | None:
+    """查找最新报告 JSON，兼容新旧两种目录结构。
+
+    优先级：
+    1. output/latest.json（旧格式）
+    2. output/weekly-YYYY-MM-DD/newsletter.json（新格式）
+    3. output/weekly-YYYY-MM-DD.json（旧格式，无子目录）
+    """
+    # 1) 旧版 latest.json
+    latest = _REPORT_OUTPUT_DIR / "latest.json"
+    if latest.exists():
+        return latest
+
+    # 2) 新版 weekly-日期/newsletter.json
+    nl = find_latest_newsletter_json()
+    if nl and nl.exists():
+        return nl
+
+    # 3) 旧版 weekly-日期.json（平铺在 output/ 下）
+    candidates = sorted(
+        _REPORT_OUTPUT_DIR.glob("weekly-*.json"),
+        key=lambda p: p.stem,
+        reverse=True,
+    )
+    if candidates:
+        return candidates[0]
+
+    return None
 
 
 def load_latest_report_dict() -> dict | None:
-    target = find_latest_newsletter_json()
+    """加载最新报告的原始字典，兼容新旧格式。"""
+    target = _find_any_latest_report_path()
     if target is None or not target.exists():
         return None
     with open(target, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+
+    # 如果是旧格式（有 signals 但没有 brand_name），补充缺失的元信息
+    # 使 /api/report 和 /api/meta 都能正确返回数据
+    if "signals" in data and "brand_name" not in data:
+        date_str = data.get("date", "")
+        data.setdefault("brand_name", "闪联AI周刊")
+        data.setdefault("title", data.get("title") or "AI双周产品周报")
+        if not data.get("period_start") or not data.get("period_end"):
+            from datetime import datetime, timedelta
+            try:
+                d = datetime.strptime(date_str, "%Y-%m-%d")
+                data.setdefault("period_start", (d - timedelta(days=14)).strftime("%Y-%m-%d"))
+                data.setdefault("period_end", date_str)
+            except (ValueError, TypeError):
+                pass
+
+    return data
 
 
 def _issue_slug(newsletter: WeeklyNewsletter) -> str:
@@ -78,11 +129,68 @@ def _resolve_newsletter(report: dict | WeeklyNewsletter | None) -> WeeklyNewslet
     if isinstance(report, WeeklyNewsletter):
         return report
     if isinstance(report, dict):
-        return WeeklyNewsletter.from_dict(report)
+        return _dict_to_newsletter(report)
     raw = load_latest_report_dict()
     if raw is None:
         raise FileNotFoundError("暂无可导出的周报数据")
-    return WeeklyNewsletter.from_dict(raw)
+    return _dict_to_newsletter(raw)
+
+
+def _dict_to_newsletter(report: dict) -> WeeklyNewsletter:
+    """将 dict 转为 WeeklyNewsletter，兼容新旧两种 JSON 格式。
+
+    - 新格式：含 brand_name / overview / industry_news
+    - 旧格式：含 title / summary / signals / items
+    """
+    # 新格式直接用 from_dict
+    if "brand_name" in report and "overview" in report:
+        return WeeklyNewsletter.from_dict(report)
+
+    # 旧格式：signals → industry_news，补全 overview 等字段
+    from datetime import datetime, timedelta
+    from app.models.daily_report import (
+        IndustryNewsItem,
+        OverviewBlock,
+    )
+
+    date_str = report.get("date", "") or (report.get("generated_at") or "")[:10]
+    period_start = report.get("period_start", "")
+    period_end = report.get("period_end", "")
+    if (not period_start or not period_end) and date_str:
+        try:
+            d = datetime.strptime(date_str, "%Y-%m-%d")
+            period_start = period_start or (d - timedelta(days=14)).strftime("%Y-%m-%d")
+            period_end = period_end or date_str
+        except (ValueError, TypeError):
+            pass
+
+    industry_news = []
+    for s in report.get("signals", []):
+        title = s.get("title") or s.get("signal", "")
+        industry_news.append(IndustryNewsItem(
+            date_label=s.get("published_at") or date_str,
+            title=title,
+            summary=s.get("insight") or s.get("signal", ""),
+            url=s.get("url") or "",
+            image_url="",
+            usage_note="",
+        ))
+
+    return WeeklyNewsletter(
+        brand_name=report.get("title") or "闪联AI周刊",
+        overview=OverviewBlock(
+            date_start=period_start,
+            date_end=period_end,
+            editor="产品资讯组",
+            core_summary=report.get("summary", ""),
+        ),
+        industry_news=industry_news,
+        generated_at=report.get("generated_at", ""),
+        issue_number=int(report.get("issue_number", 0) or 0),
+        period_start=period_start,
+        period_end=period_end,
+        total_sources=int(report.get("total_sources", 0) or 0),
+    )
 
 
 def _image_src_for_html(image_url: str, issue_slug: str) -> str:

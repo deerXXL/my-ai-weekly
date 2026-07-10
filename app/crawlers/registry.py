@@ -11,8 +11,8 @@ from app.crawlers.google_research import fetch_google_research
 from app.crawlers.techcrunch_ai import fetch_techcrunch_ai
 from app.crawlers.venturebeat_ai import fetch_venturebeat_ai
 from app.crawlers.reddit_ml import fetch_reddit_ml
-from app.crawlers.jiqizhixin_ai import fetch_jiqizhixin_ai
-from app.crawlers.kr36_ai import fetch_kr36_ai
+from app.crawlers.jiqizhixin_ai import fetch_jiqizhixin as fetch_jiqizhixin_ai
+from app.crawlers.kr36_ai import fetch_36kr_ai as fetch_kr36_ai
 
 # 双周报告需要覆盖14天的内容，所有crawler提高抓取量
 BIWEEKLY_LIMIT = 40

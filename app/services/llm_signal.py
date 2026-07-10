@@ -297,12 +297,6 @@ def generate_signal(item):
 # 接受纯字典(从 weekly JSON 反序列化得到)，返回更新后的字典
 # ============================================================
 
-    """
-    根据 weekly JSON 中已存在的 signal 字典，重新调用 LLM 生成摘要。
-    输入字段期望: title / url / source / insight(可空)
-    返回新字典: {signal, insight, category, impact}，失败时保留原值。
-    """
-
 def parse_json_response(content):
 
     text = _extract_json(content)

@@ -279,6 +279,14 @@ async function runCollect(btn) {
   try {
     const res = await fetch("/api/collect", { method: "POST" });
     const data = await res.json();
+
+    // 同一天已采集过：直接提示，不跑流水线
+    if (data.status === "already_updated") {
+      hideStatus();
+      alert(`ℹ️ ${data.message}`);
+      return;
+    }
+
     if (!data.task_id) throw new Error(data.message || "启动失败");
     await pollTask(data.task_id);
 

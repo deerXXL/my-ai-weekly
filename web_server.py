@@ -3,6 +3,7 @@ import threading
 import time
 import traceback
 import uuid
+from datetime import datetime
 from pathlib import Path
 from app.services.report_reader import to_frontend_articles
 
@@ -63,12 +64,12 @@ def _run_collect(tid: str):
         _update_task(tid, progress=5, message="正在加载数据源…")
         from app.pipeline import run_pipeline
         report = run_pipeline()
-        n = len(report.signals or [])
+        n = len(report.industry_news or [])
         _update_task(
             tid,
             status="success",
             progress=100,
-            message=f"采集完成，共 {n} 条信号",
+            message=f"采集完成，共 {n} 条行业动态",
             result={"signal_count": n, "date": report.date},
         )
     except Exception as exc:
@@ -181,18 +182,28 @@ def api_report():
 
     if report is None:
         return jsonify([])
-    
-    return jsonify(
-    report.get("articles", [])
-    )
-    return jsonify(report.get("articles", []))
+
+    # 如果 report 已经是 report_reader 处理过的（有 articles 字段），直接返回
+    if "articles" in report:
+        return jsonify(report["articles"])
+
+    # 否则走 to_frontend_articles 转换（兼容 signals 和 industry_news 两种格式）
+    return jsonify(to_frontend_articles(report))
 
 
 @app.route("/api/meta")
 def api_meta():
-    return jsonify(
-    load_latest_report_dict() or {}
-    )
+    report = load_latest_report_dict()
+    if report is None:
+        return jsonify({})
+    # 前端需要: title, period_start, period_end, date
+    return jsonify({
+        "title": report.get("title") or report.get("brand_name", ""),
+        "date": report.get("date") or (report.get("generated_at") or "")[:10],
+        "period_start": report.get("period_start", ""),
+        "period_end": report.get("period_end", ""),
+        "issue_number": report.get("issue_number", 0),
+    })
 
 
 @app.route("/api/archive")
@@ -250,6 +261,16 @@ def api_archive():
 
 @app.route("/api/collect", methods=["POST"])
 def api_collect():
+    # 同一天已采集过则直接返回，不重复跑流水线
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_report = OUTPUT_DIR / f"weekly-{today}.json"
+    if today_report.exists():
+        return jsonify({
+            "status": "already_updated",
+            "message": f"今天（{today}）已更新过本期资讯，无需重复采集",
+            "date": today,
+        })
+
     tid = _new_task("collect")
     th = threading.Thread(target=_run_collect, args=(tid,), daemon=True)
     th.start()
