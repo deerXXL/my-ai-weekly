@@ -5,10 +5,10 @@ from datetime import datetime
 from app.models.raw_item import RawItem
 
 
-URL = "https://venturebeat.com/category/ai/"
+URL = "https://www.jiqizhixin.com/"
 
 
-def fetch_venturebeat_ai(limit=50):
+def fetch_jiqizhixin():
 
     items=[]
 
@@ -30,25 +30,39 @@ def fetch_venturebeat_ai(limit=50):
         )
 
 
-        for h2 in soup.find_all(
-            "h2",
-            limit=limit
+        for a in soup.find_all(
+            "a",
+            limit=80   # 双周报告需要覆盖14天内容
         ):
 
-            title=h2.get_text(
+            title=a.get_text(
                 strip=True
             )
 
 
-            a=h2.find("a")
+            href=a.get(
+                "href"
+            )
 
 
-            if a:
+            if (
+                title
+                and href
+                and len(title)>10
+            ):
+
+                if href.startswith("/"):
+
+                    href = (
+                        "https://www.jiqizhixin.com"
+                        + href
+                    )
+
                 published_at = None
-                # 尝试从父级文章卡片获取时间
-                article = h2.find_parent("article")
-                if article:
-                    time_tag = article.find("time")
+                # 尝试从父级获取时间标签
+                parent = a.find_parent()
+                if parent:
+                    time_tag = parent.find("time")
                     if time_tag and time_tag.get("datetime"):
                         try:
                             dt = datetime.fromisoformat(time_tag.get("datetime").replace("Z", "+00:00"))
@@ -59,10 +73,10 @@ def fetch_venturebeat_ai(limit=50):
                 items.append(
 
                     RawItem(
-                        source="VentureBeat",
+                        source="机器之心",
                         title=title,
                         description=title,
-                        url=a.get("href"),
+                        url=href,
                         category="行业资讯",
                         published_at=published_at
                     )
@@ -73,9 +87,9 @@ def fetch_venturebeat_ai(limit=50):
     except Exception as e:
 
         print(
-            "VentureBeat error:",
+            "机器之心 error:",
             e
         )
 
 
-    return items
+    return items[:10]

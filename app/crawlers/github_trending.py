@@ -2,6 +2,7 @@
 import urllib3
 
 from bs4 import BeautifulSoup
+from datetime import datetime
 from app.models.raw_item import RawItem
 
 
@@ -45,12 +46,16 @@ def fetch_github_trending():
             desc_tag = article.find("p")
             description = desc_tag.get_text().strip() if desc_tag else "No description"
 
+            # GitHub trending 没有具体日期，但可以用今天作为参考
+            published_at = datetime.now().strftime("%Y-%m-%d")
+
             items.append(
                 RawItem(
-                    source="github",
+                    source="GitHub",
                     title=title,
                     description=description,
                     url=link,
+                    published_at=published_at
                 )
             )
 
@@ -61,9 +66,10 @@ def fetch_github_trending():
         print("GitHub fetch failed:", repr(exc))
         return [
             RawItem(
-                source="github",
+                source="GitHub",
                 title="GitHub trending fetch failed",
                 description="GitHub is temporarily unavailable.",
                 url="https://github.com",
+                published_at=datetime.now().strftime("%Y-%m-%d")
             )
         ]

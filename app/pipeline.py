@@ -1,6 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
-
 from app.crawlers.registry import load_all_sources
 from app.models.daily_report import (
     IndustryNewsItem,
@@ -37,6 +36,36 @@ def _assign_date_labels(count: int, end: datetime, period_days: int = 14) -> lis
         offset = int(round(i * span / (count - 1)))
         labels.append(format_date_label(end - timedelta(days=offset)))
     return labels
+
+def _sort_items_by_date(items):
+    """
+    按发布时间升序排列
+    无日期排最后
+    """
+
+    def _key(item):
+
+        if item.published_at:
+
+            try:
+                return datetime.strptime(
+                    item.published_at,
+                    "%Y-%m-%d"
+                )
+
+            except (
+                ValueError,
+                TypeError
+            ):
+                pass
+
+        return datetime.max
+
+
+    return sorted(
+        items,
+        key=_key
+    )
 
 
 def _analyze_parallel(items, limit: int) -> list[dict]:
@@ -136,6 +165,7 @@ def _build_tech_summary(data: dict) -> TechSummarySection:
         title_suffix=raw.get("title_suffix") or "三大趋势",
         trends=trends[:3],
         feasibility=feasibility[:3],
+
     )
 
 
@@ -150,7 +180,14 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
     print(f"\n本期范围：近 {cfg.period_days} 天\n")
 
     with timer.stage("抓取资讯"):
-        items = filter_items(load_all_sources())
+
+        items = filter_items(
+            load_all_sources(),
+            days=cfg.period_days,
+            mode="practical",
+        )
+
+        items = _sort_items_by_date(items)
     print(f"过滤后 {len(items)} 条，并行分析前 {analyze_limit} 条（{MAX_LLM_WORKERS} 并发）\n")
 
     with timer.stage("LLM逐条分析"):
