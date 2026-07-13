@@ -8,6 +8,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+_PROXY_ENV_KEYS = (
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "all_proxy",
+)
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
+# 默认直连；仅当 AI_WEEKLY_USE_PROXY=1 时才保留 HTTP_PROXY/HTTPS_PROXY 等环境变量
+USE_HTTP_PROXY = _env_flag("AI_WEEKLY_USE_PROXY", default=False)
+if not USE_HTTP_PROXY:
+    for key in _PROXY_ENV_KEYS:
+        os.environ.pop(key, None)
+
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
 NEWSLETTER_CONFIG_PATH = BASE_DIR / "config" / "newsletter.json"
@@ -15,6 +38,10 @@ NEWSLETTER_CONFIG_PATH = BASE_DIR / "config" / "newsletter.json"
 ARK_API_KEY = os.getenv("ARK_API_KEY")
 ARK_BASE_URL = os.getenv("ARK_BASE_URL")
 ARK_MODEL = os.getenv("ARK_MODEL")
+ARK_IMAGE_BASE_URL = os.getenv(
+    "ARK_IMAGE_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3"
+)
+ARK_IMAGE_MODEL = os.getenv("ARK_IMAGE_MODEL", "doubao-seedream-4-5-251128")
 
 WEEKDAY_CN = ("周一", "周二", "周三", "周四", "周五", "周六", "周日")
 

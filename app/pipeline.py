@@ -1,6 +1,10 @@
+import config  # noqa: F401 — 先加载 .env 与代理策略，再导入会发 HTTP 请求的模块
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
-from app.crawlers.registry import load_all_sources
+from app.crawlers.registry import fetch_all_lists
+from app.services.detail_enricher import enrich_items
+from app.services.sources_config import load_sources_config
 from app.models.daily_report import (
     IndustryNewsItem,
     NumberedBulletGroup,
@@ -9,6 +13,7 @@ from app.models.daily_report import (
     TechSummarySection,
     WeeklyNewsletter,
 )
+from app.services.cover_generator import generate_cover
 from app.services.file_writer import write_html, write_json, write_markdown
 from app.services.filter import filter_items
 from app.services.issue_paths import ensure_issue_dir
@@ -21,8 +26,6 @@ ANALYZE_LIMIT = 20
 MAX_INDUSTRY_ITEMS = 10
 MAX_LLM_WORKERS = 5
 MAX_IMAGE_WORKERS = 5
-
-TRUSTED_IMAGE_SOURCES = {"AIbase"}
 
 
 def _assign_date_labels(count: int, end: datetime, period_days: int = 14) -> list[str]:
@@ -94,8 +97,7 @@ def _resolve_one_image(args: tuple) -> tuple[int, str]:
         candidate_image=c.get("image_url") or "",
         date_tag=date_tag,
         index=idx,
-        trust_candidate=bool(c.get("image_url"))
-        and c.get("source") in TRUSTED_IMAGE_SOURCES,
+        trust_candidate=True,
     )
     return idx, path
 
@@ -179,16 +181,27 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
 
     print(f"\n本期范围：近 {cfg.period_days} 天\n")
 
-    with timer.stage("抓取资讯"):
+    src_cfg = load_sources_config()
+    detail_top_n = int(src_cfg.get("detail_top_n", 45))
+    detail_workers = int(src_cfg.get("detail_workers", 6))
 
+    with timer.stage("抓取列表"):
+        raw_items = fetch_all_lists()
+    print(f"列表合计 {len(raw_items)} 条")
+
+    with timer.stage("去重筛选"):
         items = filter_items(
-            load_all_sources(),
+            raw_items,
             days=cfg.period_days,
             mode="practical",
         )
-
         items = _sort_items_by_date(items)
-    print(f"过滤后 {len(items)} 条，并行分析前 {analyze_limit} 条（{MAX_LLM_WORKERS} 并发）\n")
+    print(f"筛选后 {len(items)} 条（国内优先）")
+
+    with timer.stage("补充详情"):
+        items = enrich_items(items[:detail_top_n], workers=detail_workers)
+
+    print(f"分析前 {min(analyze_limit, len(items))} 条（{MAX_LLM_WORKERS} 并发）\n")
 
     with timer.stage("LLM逐条分析"):
         candidates = _analyze_parallel(items, analyze_limit)
@@ -234,6 +247,12 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
         tech_summary=_build_tech_summary(composed),
         generated_at=now.strftime("%Y-%m-%d %H:%M:%S"),
     )
+
+    issue_dir = ensure_issue_dir(date_tag)
+    with timer.stage("封面生成"):
+        cover_path = generate_cover(newsletter, issue_dir)
+        if cover_path:
+            newsletter.overview.cover_image = cover_path
 
     with timer.stage("写入文件"):
         write_json(newsletter)

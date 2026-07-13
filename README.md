@@ -24,6 +24,20 @@ ARK_MODEL=ark-code-latest
 
 API Key 在 [火山方舟控制台](https://console.volcengine.com/ark) 获取。
 
+### 代理（可选）
+
+**默认直连**，不会使用系统或 Clash 注入的 `HTTP_PROXY`/`HTTPS_PROXY`。
+
+抓取海外源需要代理时，在 `.env` 显式开启：
+
+```env
+AI_WEEKLY_USE_PROXY=1
+HTTP_PROXY=http://127.0.0.1:7897
+HTTPS_PROXY=http://127.0.0.1:7897
+```
+
+若 `AI_WEEKLY_USE_PROXY=1` 但本地代理未启动，海外源请求会连接失败（超时或 connection refused），国内源不受影响。
+
 ## 使用
 
 ```powershell
@@ -56,9 +70,16 @@ curl -OJ "http://127.0.0.1:5000/api/export?format=html"
 - [AIbase 资讯](https://www.aibase.com/zh/news)
 - [XixAI 资讯](https://xix.ai/zh/ainews/ainews)
 
-**海外：** GitHub Trending、OpenAI、HuggingFace、Google Research、TechCrunch、VentureBeat、Reddit
+**海外：** GitHub Trending、OpenAI、Anthropic、HuggingFace、Google Research、TechCrunch、VentureBeat、Reddit、36氪、机器之心
 
-## 项目结构
+所有抓取源在 `config/sources.json` 统一维护（启用/禁用、权重、国内/海外、是否补充详情）。
+
+## 抓取策略
+
+1. **抓取列表** — 多站点并行拉取标题/摘要（国内源优先调度）
+2. **去重筛选** — URL + 标题归一化去重，国内源保底，按权重排序
+3. **补充详情** — 对 Top 45 重点条目抓取文章页（描述、封面图）
+4. **LLM 分析 → 策展 → 配图下载**（配图不再调用 LLM 匹配）
 
 ```
 app/
@@ -68,6 +89,7 @@ app/
   pipeline.py        主流程
 config/
   newsletter.json    周刊品牌与栏目配置
+  sources.json       抓取源统一配置（国内/海外、权重、limit）
 prompts/             LLM Prompt 模板
 main.py              唯一入口（生成 + 预览）
 web_server.py        Flask 预览与导出
@@ -101,10 +123,12 @@ sequenceDiagram
 
     U->>M: python main.py
     M->>P: run_pipeline()
-    P->>C: 并行抓取国内聚合源 + 海外源
+    P->>C: 并行抓取列表（sources.json）
     C-->>P: 原始资讯
-    P->>L: 逐条分析 → 策展合成 → 配图匹配
+    P->>P: 去重筛选 + 补充详情
+    P->>L: 逐条分析 → 策展合成
     L-->>P: WeeklyNewsletter
+    P->>P: 配图下载（无 LLM 匹配）
     P->>O: weekly-日期/newsletter.{json,md,html}
     M-->>U: 本地预览 http://127.0.0.1:5000/
 ```

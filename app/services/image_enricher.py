@@ -1,8 +1,7 @@
 """从文章页提取 og:image / twitter:image。"""
-import requests
 from bs4 import BeautifulSoup
 
-from app.crawlers._http_utils import DEFAULT_HEADERS
+from app.crawlers._http_utils import get_http_session
 
 META_PROPERTIES = (
     "og:image",
@@ -12,11 +11,11 @@ META_PROPERTIES = (
 )
 
 
-def fetch_og_image(url: str, timeout: int = 12) -> str:
+def fetch_og_image(url: str, timeout: int = 8) -> str:
     if not url or not url.startswith("http"):
         return ""
     try:
-        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=timeout)
+        response = get_http_session().get(url, timeout=(5, timeout))
         response.encoding = response.apparent_encoding or "utf-8"
         soup = BeautifulSoup(response.text, "html.parser")
         for prop in META_PROPERTIES:

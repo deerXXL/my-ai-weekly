@@ -2,6 +2,7 @@
 import argparse
 import os
 
+import config  # noqa: F401
 from app.pipeline import run_pipeline
 from app.services.issue_paths import issue_name
 from web_server import app
