@@ -297,18 +297,78 @@ def generate_signal(item):
 # 接受纯字典(从 weekly JSON 反序列化得到)，返回更新后的字典
 # ============================================================
 
+def _repair_unescaped_quotes(text: str) -> str:
+    """修复字符串值内部未转义的双引号。
+
+    模型在 bullets/summary 里常写出形如 '宜"渐进渗透"而非' 的文本，
+    其中的英文双引号没有转义，导致 JSON 解析器误判字符串结束。
+    逐字符扫描：在「字符串内部」遇到双引号时，若其后不是合法的结构性边界
+    （逗号、冒号、括号、空白后接这些，或字符串结尾），则将其转义为 \\"。
+    """
+    out = []
+    in_str = False
+    escape = False
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if escape:
+            out.append(ch)
+            escape = False
+            i += 1
+            continue
+        if ch == "\\":
+            out.append(ch)
+            escape = True
+            i += 1
+            continue
+        if ch == '"':
+            if not in_str:
+                in_str = True
+                out.append(ch)
+                i += 1
+                continue
+            # 在字符串内部遇到了双引号，判断它是「字符串结束符」还是「内部未转义引号」
+            j = i + 1
+            while j < n and text[j] in " \t\r\n":
+                j += 1
+            # 若紧跟结构边界，认为这是正常的字符串结束
+            if j < n and text[j] in ",:}]":
+                in_str = False
+                out.append(ch)
+                i += 1
+                continue
+            if j >= n:
+                # 文件尾，按结束处理
+                in_str = False
+                out.append(ch)
+                i += 1
+                continue
+            # 否则视为字符串内部的未转义双引号，转义它
+            out.append('\\"')
+            i += 1
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)
+
+
 def parse_json_response(content):
 
     text = _extract_json(content)
 
     try:
         return json.loads(text)
-
     except json.JSONDecodeError:
+        pass
 
-        return json.loads(
-            _repair_simple_json(text)
-        )
+    try:
+        return json.loads(_repair_simple_json(text))
+    except json.JSONDecodeError:
+        pass
+
+    # 最后兜底：修复字符串内部未转义的双引号
+    return json.loads(_repair_unescaped_quotes(text))
 
 def compose_newsletter(candidates: list[dict], max_items: int = 6) -> dict:
     lines = []
@@ -334,14 +394,20 @@ def compose_newsletter(candidates: list[dict], max_items: int = 6) -> dict:
         )
     )
 
-
-    raw = call_llm(prompt)
-
     print(
         "[compose] 策展 + 核心摘要 + 技术总结..."
     )
 
-    return parse_json_response(raw)
+    # 注意：模型在 bullets 文本里常写出未转义的双引号（如 "渐进渗透"），
+    # 导致 JSON 解析失败。这里第一次用较大 token 避免截断；
+    # 若仍解析失败，重试一次（重新生成通常能得到合法 JSON）。
+    raw = call_llm(prompt, max_tokens=4096)
+    try:
+        return parse_json_response(raw)
+    except Exception as exc:
+        print(f"❌ compose 首次解析失败：{exc}，重试一次…")
+        raw = call_llm(prompt, max_tokens=6144)
+        return parse_json_response(raw)
 
 
 

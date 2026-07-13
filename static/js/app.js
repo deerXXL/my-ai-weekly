@@ -247,24 +247,41 @@ function hideStatus() {
 
 // 轮询后台任务
 async function pollTask(tid) {
-  const maxTries = 600; // 最多等 10 分钟（每秒一次）
-  for (let i = 0; i < maxTries; i++) {
-    try {
-      const res = await fetch(`/api/task/${tid}`);
-      const t = await res.json();
-      updateStatus(t.progress || 0, t.message || "");
+  const maxTries = 600;
 
-      if (t.status === "success") {
-        return t;
-      }
-      if (t.status === "failed") {
-        throw new Error(t.message || "任务失败");
-      }
-    } catch (e) {
-      // 网络抖动，继续轮询
+  for (let i = 0; i < maxTries; i++) {
+
+    const res = await fetch(`/api/task/${tid}`);
+
+    if (!res.ok) {
+      throw new Error("任务不存在，可能服务已重启，请重新执行");
     }
-    await new Promise(r => setTimeout(r, 1000));
+
+    const t = await res.json();
+
+    updateStatus(
+      t.progress || 0,
+      t.message || ""
+    );
+
+
+    if (t.status === "success") {
+      return t;
+    }
+
+
+    if (t.status === "failed") {
+      throw new Error(
+        t.message || "任务失败"
+      );
+    }
+
+
+    await new Promise(
+      r => setTimeout(r,1000)
+    );
   }
+
   throw new Error("任务超时");
 }
 

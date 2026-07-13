@@ -91,6 +91,8 @@ def write_json(newsletter: WeeklyNewsletter) -> Path:
     path = folder / NEWSLETTER_JSON
 
 
+    payload = newsletter.to_dict()
+
     with open(
         path,
         "w",
@@ -98,15 +100,32 @@ def write_json(newsletter: WeeklyNewsletter) -> Path:
     ) as f:
 
         json.dump(
-            newsletter.to_dict(),
+            payload,
             f,
             ensure_ascii=False,
             indent=2
         )
 
+    # 同步写入 output/latest.json（旧入口 /api/summarize 等仍依赖它），
+    # 保证前端始终能读到最新一期数据，而不是停留在旧的 latest.json。
+    legacy_latest = folder.parent / "latest.json"
+    with open(
+        legacy_latest,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            payload,
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
 
     print(
         f"JSON generated: {path}"
     )
+
+    return path
 
     return path

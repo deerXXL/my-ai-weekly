@@ -32,9 +32,6 @@ TASK_LOCK = threading.Lock()
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
 
-BASE_DIR = Path(__file__).resolve().parent
-OUTPUT_DIR = BASE_DIR / "output"
-
 
 def _new_task(name: str) -> str:
     tid = uuid.uuid4().hex[:12]
@@ -171,6 +168,9 @@ def api_report():
 
     if filename:
         path = OUTPUT_DIR / filename
+        # 兼容新格式目录：output/weekly-YYYY-MM-DD/newsletter.json
+        if path.is_dir():
+            path = path / "newsletter.json"
         if not path.exists():
             return jsonify({"error": f"文件不存在：{filename}"}), 404
         import json
@@ -196,34 +196,70 @@ def api_meta():
     report = load_latest_report_dict()
     if report is None:
         return jsonify({})
+    # 新格式把区间存在 overview.date_start/date_end，旧格式用 period_start/end
+    overview = report.get("overview") or {}
+    period_start = (
+        report.get("period_start")
+        or overview.get("date_start", "")
+        or ""
+    )
+    period_end = (
+        report.get("period_end")
+        or overview.get("date_end", "")
+        or ""
+    )
     # 前端需要: title, period_start, period_end, date
     return jsonify({
         "title": report.get("title") or report.get("brand_name", ""),
         "date": report.get("date") or (report.get("generated_at") or "")[:10],
-        "period_start": report.get("period_start", ""),
-        "period_end": report.get("period_end", ""),
+        "period_start": period_start,
+        "period_end": period_end,
         "issue_number": report.get("issue_number", 0),
     })
 
 
 @app.route("/api/archive")
 def api_archive():
-    reports = []
+    import json
+    from datetime import datetime, timedelta
+
+    # 收集所有期号：兼容两种存储格式
+    #  - 旧：output/weekly-YYYY-MM-DD.json
+    #  - 新：output/weekly-YYYY-MM-DD/newsletter.json
+    entries = []  # (date_str, path)
+
+    for file in OUTPUT_DIR.glob("weekly-*.json"):
+        date_str = file.stem.replace("weekly-", "")
+        entries.append((date_str, file))
+
+    for d in OUTPUT_DIR.glob("weekly-*"):
+        if not d.is_dir():
+            continue
+        nj = d / "newsletter.json"
+        if nj.exists():
+            date_str = d.name.replace("weekly-", "")
+            entries.append((date_str, nj))
+
+    # 同一日期去重（优先目录内 newsletter.json）
+    seen = {}
+    for date_str, path in entries:
+        key = date_str
+        prefer_dir = path.name == "newsletter.json"
+        if key not in seen or (prefer_dir and seen[key].name != "newsletter.json"):
+            seen[key] = path
+
     # 按日期升序编号（最旧的 = 第1期）
-    files = sorted(OUTPUT_DIR.glob("weekly-*.json"))
-    total = len(files)
-    for idx, file in enumerate(files, 1):
+    sorted_items = sorted(seen.items(), key=lambda kv: kv[0])
+    total = len(sorted_items)
+    reports = []
+    for idx, (date_str, file) in enumerate(sorted_items, 1):
         try:
-            import json
-            from datetime import datetime, timedelta
             with open(file, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            date_str = file.stem.replace("weekly-", "")
-
-            # 如果JSON中没有period字段，从文件名日期反推双周区间
-            period_start = data.get("period_start", "")
-            period_end = data.get("period_end", "")
+            overview = data.get("overview") or {}
+            period_start = data.get("period_start") or overview.get("date_start", "")
+            period_end = data.get("period_end") or overview.get("date_end", "")
             if not period_start or not period_end:
                 try:
                     d = datetime.strptime(date_str, "%Y-%m-%d")
@@ -232,22 +268,23 @@ def api_archive():
                 except ValueError:
                     pass
 
-            # 如果没有issue_number，用反向编号（最新的是第N期）
             issue_number = data.get("issue_number") or (total - idx + 1)
 
-            # 兼容旧标题
             title = data.get("title", "")
             if not title or title == "AI Daily Report":
                 title = f"AI双周产品周报 · 第{issue_number}期"
 
+            # 新格式用 industry_news，旧格式用 signals
+            count = len(data.get("industry_news") or data.get("signals") or [])
+
             reports.append({
-                "file": file.name,
+                "file": file.parent.name if file.name == "newsletter.json" else file.name,
                 "date": date_str,
                 "title": title,
                 "issue_number": issue_number,
                 "period_start": period_start,
                 "period_end": period_end,
-                "signal_count": len(data.get("signals", [])),
+                "signal_count": count,
                 "size_kb": round(file.stat().st_size / 1024, 1),
                 "mtime": file.stat().st_mtime,
             })
@@ -263,8 +300,10 @@ def api_archive():
 def api_collect():
     # 同一天已采集过则直接返回，不重复跑流水线
     today = datetime.now().strftime("%Y-%m-%d")
-    today_report = OUTPUT_DIR / f"weekly-{today}.json"
-    if today_report.exists():
+    # 兼容新旧两种存储：新格式目录内的 newsletter.json，或旧格式平铺 json
+    today_new = OUTPUT_DIR / f"weekly-{today}" / "newsletter.json"
+    today_old = OUTPUT_DIR / f"weekly-{today}.json"
+    if today_new.exists() or today_old.exists():
         return jsonify({
             "status": "already_updated",
             "message": f"今天（{today}）已更新过本期资讯，无需重复采集",
@@ -298,7 +337,10 @@ def api_task(tid: str):
     with TASK_LOCK:
         task = TASKS.get(tid)
     if not task:
-        return jsonify({"error": "task not found"}), 404
+        return jsonify({
+            "status": "not_found",
+            "message": "任务已失效，请重新启动"
+    }), 200
     return jsonify(task)
 
 

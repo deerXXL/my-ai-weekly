@@ -17,8 +17,8 @@ from app.services.llm_signal import analyze_item, compose_newsletter
 from app.services.timing import StageTimer
 from config import format_date_label, load_newsletter_config, issue_period
 
-ANALYZE_LIMIT = 20
-MAX_INDUSTRY_ITEMS = 10
+ANALYZE_LIMIT = 40
+MAX_INDUSTRY_ITEMS = 30
 MAX_LLM_WORKERS = 5
 MAX_IMAGE_WORKERS = 5
 
@@ -233,6 +233,8 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
         industry_news=industry_news,
         tech_summary=_build_tech_summary(composed),
         generated_at=now.strftime("%Y-%m-%d %H:%M:%S"),
+        period_start=date_start,
+        period_end=date_end,
     )
 
     with timer.stage("写入文件"):

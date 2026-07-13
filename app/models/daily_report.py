@@ -172,6 +172,7 @@ class WeeklyNewsletter:
 
 
             # 元信息
+            "date": self.date,
             "generated_at": self.generated_at,
 
             "issue_number": self.issue_number,

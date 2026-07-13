@@ -22,7 +22,7 @@
 }
 
 约束：
-- selected_indices 长度不超过 {{max_items}}，按 impact 与代表性选取，避免同质重复
+- selected_indices 长度恰好为 {{max_items}}（候选不足时取全部），按 impact 与代表性选取，避免同质重复
 - industry_notes 的 key 为候选 index 字符串，仅对入选且适合补充「使用说明」的条目填写（如新模型、新工具、开源项目），融资/政策/事故类留空
 - 至少 3 条来自国内源（AI工具集、AIbase、XixAI）
 - trends 恰好 3 条，feasibility 恰好 3 条

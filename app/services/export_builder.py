@@ -12,34 +12,58 @@ from config import NewsletterConfig, load_newsletter_config
 _REPORT_OUTPUT_DIR = OUTPUT_DIR
 
 
+def _report_date_of(path: Path) -> str:
+    """从候选路径中提取日期标签 YYYY-MM-DD，用于比较新旧。"""
+    name = path.name
+    if name == "latest.json":
+        # 读取其内部 date 字段
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            return (d.get("date") or (d.get("generated_at") or "")[:10] or "")[:10]
+        except Exception:
+            return ""
+    # 1) 平铺旧格式：output/weekly-YYYY-MM-DD.json
+    if name.startswith("weekly-") and name.endswith(".json"):
+        return path.stem.replace("weekly-", "")
+    # 2) 新格式目录内：output/weekly-YYYY-MM-DD/newsletter.json —— 取父目录
+    if path.parent.name.startswith("weekly-"):
+        return path.parent.name.replace("weekly-", "")
+    return ""
+
+
 def _find_any_latest_report_path() -> Path | None:
     """查找最新报告 JSON，兼容新旧两种目录结构。
 
-    优先级：
-    1. output/latest.json（旧格式）
-    2. output/weekly-YYYY-MM-DD/newsletter.json（新格式）
-    3. output/weekly-YYYY-MM-DD.json（旧格式，无子目录）
+    按报告日期挑选真正的「最新一期」，而不是盲目优先某个文件名。
+    候选：
+      - output/latest.json（旧格式，可能陈旧）
+      - output/weekly-YYYY-MM-DD/newsletter.json（新格式）
+      - output/weekly-YYYY-MM-DD.json（旧格式，平铺）
     """
-    # 1) 旧版 latest.json
+    candidates: list[Path] = []
+
     latest = _REPORT_OUTPUT_DIR / "latest.json"
     if latest.exists():
-        return latest
+        candidates.append(latest)
 
-    # 2) 新版 weekly-日期/newsletter.json
     nl = find_latest_newsletter_json()
     if nl and nl.exists():
-        return nl
+        candidates.append(nl)
 
-    # 3) 旧版 weekly-日期.json（平铺在 output/ 下）
-    candidates = sorted(
-        _REPORT_OUTPUT_DIR.glob("weekly-*.json"),
-        key=lambda p: p.stem,
+    for p in _REPORT_OUTPUT_DIR.glob("weekly-*.json"):
+        if p.exists():
+            candidates.append(p)
+
+    if not candidates:
+        return None
+
+    # 按提取到的日期降序，取最新的；日期相同则按 mtime 降序
+    candidates.sort(
+        key=lambda p: (_report_date_of(p), p.stat().st_mtime),
         reverse=True,
     )
-    if candidates:
-        return candidates[0]
-
-    return None
+    return candidates[0]
 
 
 def load_latest_report_dict() -> dict | None:
