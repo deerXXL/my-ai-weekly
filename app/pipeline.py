@@ -251,10 +251,19 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
     )
 
     issue_dir = ensure_issue_dir(date_tag)
+
+# 保存当前周刊目录名，供前端访问图片
+    newsletter.issue_dir = issue_dir.name
+
     with timer.stage("封面生成"):
         cover_path = generate_cover(newsletter, issue_dir)
+
         if cover_path:
             newsletter.overview.cover_image = cover_path
+        if cover_path:
+            newsletter.overview.cover_image = (
+                f"{issue_dir.name}/{cover_path}"
+            )
 
     with timer.stage("写入文件"):
         write_json(newsletter)

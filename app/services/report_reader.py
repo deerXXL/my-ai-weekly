@@ -153,22 +153,44 @@ def to_frontend_articles(report: dict) -> list[dict]:
                 "impact": impact,
                 "link": signal.get("url") or "#",
                 "published_at": pub_date,
+                "image_url": signal.get("image_url", ""),
             })
 
     # === 新格式：industry_news ===
     elif report.get("industry_news"):
+        # 从 report 中获取 issue_dir，用于构建图片的完整 URL 路径
+        issue_dir = report.get("issue_dir", "")
+        date_str = report.get("date", "") or (report.get("generated_at") or "")[:10]
+        if not issue_dir and date_str:
+            issue_dir = f"weekly-{date_str}"
+
         for idx, item in enumerate(report["industry_news"]):
             pub_date = item.get("date_label") or ""
+            # 尝试从 date_label 中提取标准日期格式
+            std_date = _extract_date_from_text(pub_date) or pub_date
+
+            image_url = item.get("image_url", "")
+            # 本地图片路径补全为可通过 Flask 访问的 URL
+            # Flask 静态文件路由为 /output/<path:filename>，需带 /output/ 前缀
+            if image_url and not image_url.startswith("http"):
+                image_url = f"/output/{issue_dir}/{image_url}"
+
+            # impact 旧格式字段不可用，从 tags 或默认值推导
+            tags = ["AI资讯"]
+            if item.get("usage_note"):
+                tags.append("使用说明")
+
             articles.append({
                 "idx": idx + 1,
                 "title": item.get("title", ""),
-                "tags": ["AI资讯"],
+                "tags": tags,
                 "date": pub_date,
                 "desc": item.get("summary", ""),
                 "hot": 50,
                 "impact": 2,
                 "link": item.get("url") or "#",
-                "published_at": pub_date,
+                "published_at": std_date,
+                "image_url": image_url,
             })
 
     # 按发布时间升序（时间线从旧到新）

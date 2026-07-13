@@ -31,7 +31,7 @@ if not USE_HTTP_PROXY:
     for key in _PROXY_ENV_KEYS:
         os.environ.pop(key, None)
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parents[0]
 OUTPUT_DIR = BASE_DIR / "output"
 NEWSLETTER_CONFIG_PATH = BASE_DIR / "config" / "newsletter.json"
 

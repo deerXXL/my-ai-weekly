@@ -6,6 +6,7 @@ let articleSource = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
   loadMeta();
+
   try {
     const response = await fetch("/api/report");
 
@@ -13,23 +14,80 @@ document.addEventListener("DOMContentLoaded", async () => {
       throw new Error(`API returned ${response.status}`);
     }
 
-    articleSource = await response.json();
-    console.log("API数据:", articleSource);
+    const report = await response.json();
+
+    console.log("完整API数据:", report);
+
+
+    // 文章数据：优先使用 articles（已转换为前端格式），兼容旧格式
+    articleSource =
+        report.articles ||
+        report.industry_news ||
+        [];
+
+
+    // 渲染文章
     renderArticle(articleSource);
+
+    // 渲染热点
     renderHot(articleSource);
+
+
+    // 渲染封面（传入 overview 和 date 以构建正确的图片路径）
+    renderCover(report.overview, report.date);
+
 
     loadArchive();
 
     bindSearch();
     bindQuickActions();
+
   } catch (error) {
+
     console.error("Failed to load report:", error);
+
     renderArticle([],
       "前后端连接失败：请确认通过 python web_app.py 启动，并访问 http://127.0.0.1:5000"
     );
+
     renderHot([]);
   }
 });
+
+function renderCover(overview, date) {
+
+  const cover = document.getElementById("coverImage");
+
+  if (!cover) {
+    console.warn("没有找到 coverImage 元素");
+    return;
+  }
+
+
+  if (overview && overview.cover_image) {
+    // 统一拼成 /output/weekly-{date}/<相对路径>，匹配 Flask 的 /output/<path> 路由
+    const raw = overview.cover_image;
+    let src;
+
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      src = raw;
+    } else {
+      let rel = raw;
+      const issuePrefix = `weekly-${date}/`;
+      if (rel.startsWith(issuePrefix)) {
+        rel = rel.slice(issuePrefix.length);
+      }
+      src = `/output/weekly-${date}/${rel}`;
+    }
+
+    cover.src = src;
+    cover.onerror = () => { cover.style.display = "none"; };
+    cover.style.display = "block";
+
+  } else {
+    cover.style.display = "none";
+  }
+}
 
 function bindSearch() {
   const input = document.getElementById("searchInput");
@@ -65,6 +123,7 @@ function fmtArchiveLabel(item) {
 function updateMetaFromArchive(item) {
   const titleEl = document.getElementById("pageTitle");
   const periodEl = document.getElementById("periodRange");
+  const coverEl = document.getElementById("coverImage");
 
   if (titleEl && item.title) {
     titleEl.textContent = item.title;
@@ -77,86 +136,163 @@ function updateMetaFromArchive(item) {
   if (periodEl && display) {
     periodEl.textContent = period ? `${period}（双周）` : display;
   }
-}
 
+  const coverImage = item.cover_image;
+
+  if (coverEl && coverImage) {
+
+      coverEl.src = "/output/" + coverImage;
+
+      coverEl.style.display = "block";
+  }
+}
 async function loadArchive() {
 
-  const select = document.getElementById("weekSelect");
-  const current = document.getElementById("currentWeek");
+  try {
+
+    const select = document.getElementById("weekSelect");
+    const current = document.getElementById("currentWeek");
 
 
-  if (!select) {
-    return;
-  }
+    if (!select) {
+      return;
+    }
 
 
-  const archive = await fetchArchive();
+    const archive = await fetchArchive();
 
 
-  select.innerHTML = "";
+    if (!Array.isArray(archive)) {
+      console.error("archive 数据错误:", archive);
+      return;
+    }
 
 
-  archive.forEach(item => {
-
-    const option = document.createElement("option");
-
-    option.value = item.file;
-
-    const issueLabel = item.issue_number ? `第${item.issue_number}期 · ` : "";
-    const periodStr = fmtPeriod(item.period_start, item.period_end);
-    option.textContent = `${issueLabel}${periodStr}`;
-
-    select.appendChild(option);
-
-  });
+    select.innerHTML = "";
 
 
-  if (archive.length > 0) {
+    archive.forEach(item => {
 
-    current.textContent = fmtArchiveLabel(archive[0]);
-    updateMetaFromArchive(archive[0]);
-    select.addEventListener(
-      "change",
-      async () => {
+      const option = document.createElement("option");
 
-        const file =
-          select.value;
+      option.value = item.file;
 
-        console.log(
-          "切换报告:",
-          file
+      const issueLabel =
+        item.issue_number
+          ? `第${item.issue_number}期 · `
+          : "";
+
+      const periodStr =
+        fmtPeriod(
+          item.period_start,
+          item.period_end
         );
 
 
-        const articles =
-          await fetchReport(file);
+      option.textContent =
+        `${issueLabel}${periodStr || item.date || ""}`;
+
+
+      select.appendChild(option);
+
+    });
 
 
 
-        articleSource = articles;
+    if (archive.length > 0) {
+
+
+      current.textContent =
+        fmtArchiveLabel(archive[0]);
+
+
+      updateMetaFromArchive(
+        archive[0]
+      );
 
 
 
-        renderArticle(articleSource);
+      select.addEventListener(
+        "change",
+        async () => {
 
 
-        renderHot(articleSource);
+          const file = select.value;
+
+
+          console.log(
+            "切换报告:",
+            file
+          );
 
 
 
-        // 根据选中的归档项更新标题、统计周期、当前归档期
-        const selected = archive.find(a => a.file === file);
-        if (selected) {
-          current.textContent = fmtArchiveLabel(selected);
-          updateMetaFromArchive(selected);
+          const report =
+            await fetchReport(file);
+
+
+
+          console.log(
+            "切换后的报告:",
+            report
+          );
+
+
+
+          // 兼容新旧格式
+          articleSource =
+            report.industry_news ||
+            report.articles ||
+            [];
+
+
+
+          renderArticle(
+            articleSource
+          );
+
+
+          renderHot(
+            articleSource
+          );
+
+
+
+          const selected =
+            archive.find(
+              a => a.file === file
+            );
+
+
+
+          if(selected){
+
+            current.textContent =
+              fmtArchiveLabel(selected);
+
+
+            updateMetaFromArchive(
+              selected
+            );
+
+          }
+
+
         }
+      );
+
+    }
 
 
-      }
+  } catch(error){
+
+    console.error(
+      "加载归档失败:",
+      error
     );
 
-
   }
+
 }
 
 
@@ -176,6 +312,19 @@ async function loadMeta() {
     }
 
     if (periodEl && meta.period_start && meta.period_end) {
+      const cover = document.getElementById("coverImage");
+
+      if (cover && meta.cover_image) {
+
+          cover.src =
+            "/output/" +
+            "weekly-" +
+            meta.date +
+            "/" +
+            meta.cover_image;
+
+          cover.style.display = "block";
+      }
       const start = meta.period_start.replace(/-/g, ".");
       const end = meta.period_end.replace(/-/g, ".");
       periodEl.textContent = `${start} \u2014 ${end}\uff08\u53cc\u5468\uff09`;
@@ -392,3 +541,4 @@ async function runArchive(btn) {
   }
   alert("已在顶部显示归档期数下拉框，可切换查看往期周报。");
 }
+

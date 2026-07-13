@@ -157,6 +157,13 @@ def _run_summarize(tid: str):
 # ============================================================
 # 路由
 # ============================================================
+@app.route("/output/<path:filename>")
+def output_file(filename):
+    return send_from_directory(
+        OUTPUT_DIR,
+        filename
+    )
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -164,6 +171,7 @@ def home():
 
 @app.route("/api/report")
 def api_report():
+    import json as _json
     filename = request.args.get("file")
 
     if filename:
@@ -173,22 +181,35 @@ def api_report():
             path = path / "newsletter.json"
         if not path.exists():
             return jsonify({"error": f"文件不存在：{filename}"}), 404
-        import json
         with open(path, "r", encoding="utf-8") as f:
-            report = json.load(f)
-        return jsonify(to_frontend_articles(report))
-
-    report = load_latest_report_dict()
+            report = _json.load(f)
+    else:
+        report = load_latest_report_dict()
+        print("加载报告结果:", report)
 
     if report is None:
         return jsonify([])
 
-    # 如果 report 已经是 report_reader 处理过的（有 articles 字段），直接返回
-    if "articles" in report:
-        return jsonify(report["articles"])
+    # 将原始报告统一转为前端所需格式（兼容 industry_news 和 signals）
+    articles = to_frontend_articles(report)
 
-    # 否则走 to_frontend_articles 转换（兼容 signals 和 industry_news 两种格式）
-    return jsonify(to_frontend_articles(report))
+    # 提取 overview / meta 信息一并返回
+    overview = report.get("overview") or {}
+    result = {
+        "articles": articles,
+        "overview": overview,
+        "brand_name": report.get("brand_name", ""),
+        "title": report.get("title", ""),
+        "date": report.get("date", ""),
+        "generated_at": report.get("generated_at", ""),
+        "period_start": report.get("period_start", ""),
+        "period_end": report.get("period_end", ""),
+        "issue_number": report.get("issue_number", 0),
+    }
+
+    # 新格式 industry_news 中每条有 image_url，也保留在 articles 里
+    # image_url 字段已通过 to_frontend_articles 从 industry_news / signals 透传
+    return jsonify(result)
 
 
 @app.route("/api/meta")
@@ -196,25 +217,50 @@ def api_meta():
     report = load_latest_report_dict()
     if report is None:
         return jsonify({})
-    # 新格式把区间存在 overview.date_start/date_end，旧格式用 period_start/end
+
     overview = report.get("overview") or {}
+
     period_start = (
         report.get("period_start")
         or overview.get("date_start", "")
         or ""
     )
+
     period_end = (
         report.get("period_end")
         or overview.get("date_end", "")
         or ""
     )
-    # 前端需要: title, period_start, period_end, date
+
+
+    # 获取当前周报目录
+    date = report.get("date") or (report.get("generated_at") or "")[:10]
+
+
+    raw_cover = overview.get("cover_image", "")
+
+    if raw_cover.startswith(("http://", "https://", "/output/")):
+        # 已是完整可访问地址，原样返回
+        cover_image = raw_cover
+    else:
+        # 相对路径：去掉可能带上的 issue 目录前缀（weekly-YYYY-MM-DD/），
+        # 仅保留 images/xxx 形式，由前端拼接 /output/weekly-{date}/ 得到最终地址
+        rel = raw_cover
+        issue_prefix = f"weekly-{date}/"
+        if rel.startswith(issue_prefix):
+            rel = rel[len(issue_prefix):]
+        cover_image = rel
+
     return jsonify({
         "title": report.get("title") or report.get("brand_name", ""),
-        "date": report.get("date") or (report.get("generated_at") or "")[:10],
+        "date": date,
         "period_start": period_start,
         "period_end": period_end,
         "issue_number": report.get("issue_number", 0),
+
+        "cover_image": cover_image,
+
+        "overview": overview
     })
 
 
@@ -402,3 +448,7 @@ def serve_issue_files(issue_id: str, filepath: str):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+from flask import send_from_directory
+
+

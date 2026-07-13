@@ -117,6 +117,8 @@ class WeeklyNewsletter:
 
     tech_summary: TechSummarySection | None = None
 
+    issue_dir: str = ""
+
 
     # =====================
     # 报告元信息

@@ -127,5 +127,3 @@ def write_json(newsletter: WeeklyNewsletter) -> Path:
     )
 
     return path
-
-    return path
