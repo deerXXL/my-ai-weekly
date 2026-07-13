@@ -219,6 +219,20 @@ def build_signal_card(data, item):
         published_at=getattr(item, "published_at", None) or "",
     )
 
+TRUSTED_IMAGE_SOURCES = {"AIbase"}  # 保留供后续按来源差异化策略
+
+
+def _parse_analyze_item(content: str) -> dict | None:
+    """解析 analyze_item.md 返回的 JSON（title_zh / summary / impact）。"""
+    try:
+        data = parse_json_response(content)
+        if isinstance(data, dict) and (data.get("title_zh") or data.get("summary")):
+            return data
+    except (json.JSONDecodeError, TypeError, ValueError):
+        pass
+    return None
+
+
 def analyze_item(item: RawItem) -> dict:
     template = load_prompt_template("analyze_item.md")
     prompt = (
@@ -227,15 +241,14 @@ def analyze_item(item: RawItem) -> dict:
         .replace("{{description}}", (item.description or "")[:800])
         .replace("{{url}}", item.url)
     )
-    raw = call_llm(prompt)
-
+    raw = call_llm(prompt, max_tokens=1024)
     print(f"  [analyze] {item.title[:40]}...")
 
-    data = parse_signal(
-        raw,
-        item,
-        prompt=prompt
-    )
+    data = _parse_analyze_item(raw)
+    if data is None:
+        print("  [analyze] JSON 解析失败，重试一次...")
+        raw = call_llm(prompt, max_tokens=2048)
+        data = _parse_analyze_item(raw)
 
     if not data:
         return {
@@ -247,7 +260,6 @@ def analyze_item(item: RawItem) -> dict:
             "original_title": item.title,
             "image_url": (item.extra or {}).get("image_url") or "",
         }
-
 
     return {
         "title_zh": data.get("title_zh") or item.title,

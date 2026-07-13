@@ -1,0 +1,139 @@
+{
+  "detail_top_n": 45,
+  "domestic_per_source_min": 5,
+  "total_after_filter": 45,
+  "list_workers": 8,
+  "detail_workers": 6,
+  "sources": [
+    {
+      "id": "ai_bot_daily",
+      "name": "AI工具集",
+      "region": "domestic",
+      "enabled": true,
+      "fetcher": "app.crawlers.ai_bot_daily:fetch_ai_bot_daily",
+      "limit": 30,
+      "weight": 10,
+      "enrich_detail": false
+    },
+    {
+      "id": "aibase_news",
+      "name": "AIbase",
+      "region": "domestic",
+      "enabled": true,
+      "fetcher": "app.crawlers.aibase_news:fetch_aibase_news",
+      "limit": 30,
+      "weight": 10,
+      "enrich_detail": false
+    },
+    {
+      "id": "xix_ai_news",
+      "name": "XixAI",
+      "region": "domestic",
+      "enabled": true,
+      "fetcher": "app.crawlers.xix_ai_news:fetch_xix_ai_news",
+      "limit": 30,
+      "weight": 9,
+      "enrich_detail": false
+    },
+    {
+      "id": "jiqizhixin",
+      "name": "机器之心",
+      "region": "domestic",
+      "enabled": true,
+      "fetcher": "app.crawlers.jiqizhixin_ai:fetch_jiqizhixin",
+      "limit": 30,
+      "weight": 8,
+      "enrich_detail": true
+    },
+    {
+      "id": "kr36_ai",
+      "name": "36氪",
+      "region": "domestic",
+      "enabled": true,
+      "fetcher": "app.crawlers.kr36_ai:fetch_36kr_ai",
+      "limit": 30,
+      "weight": 8,
+      "enrich_detail": true
+    },
+    {
+      "id": "github_trending",
+      "name": "GitHub",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.github_trending:fetch_github_trending",
+      "limit": 10,
+      "weight": 6,
+      "enrich_detail": true
+    },
+    {
+      "id": "openai_blog",
+      "name": "OpenAI",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.openai_blog:fetch_openai_blog",
+      "limit": 40,
+      "weight": 10,
+      "enrich_detail": true
+    },
+    {
+      "id": "anthropic_blog",
+      "name": "Anthropic",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.anthropic_blog:fetch_anthropic_blog",
+      "limit": 40,
+      "weight": 10,
+      "enrich_detail": true
+    },
+    {
+      "id": "huggingface_blog",
+      "name": "HuggingFace",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.huggingface_blog:fetch_huggingface_blog",
+      "limit": 40,
+      "weight": 9,
+      "enrich_detail": true
+    },
+    {
+      "id": "google_research",
+      "name": "Google Research",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.google_research:fetch_google_research",
+      "limit": 20,
+      "weight": 9,
+      "enrich_detail": true
+    },
+    {
+      "id": "techcrunch_ai",
+      "name": "TechCrunch",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.techcrunch_ai:fetch_techcrunch_ai",
+      "limit": 40,
+      "weight": 8,
+      "enrich_detail": true
+    },
+    {
+      "id": "venturebeat_ai",
+      "name": "VentureBeat",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.venturebeat_ai:fetch_venturebeat_ai",
+      "limit": 40,
+      "weight": 8,
+      "enrich_detail": true
+    },
+    {
+      "id": "reddit_ml",
+      "name": "Reddit",
+      "region": "overseas",
+      "enabled": true,
+      "fetcher": "app.crawlers.reddit_ml:fetch_reddit_ml",
+      "limit": 20,
+      "weight": 5,
+      "enrich_detail": true
+    }
+  ]
+}

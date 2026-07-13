@@ -133,11 +133,13 @@ def validate_markdown_structure(md: str) -> list[str]:
 
 def _render_overview(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> list[str]:
     ov = newsletter.overview
-    return [
+    lines = [
         f"# {newsletter.brand_name}",
         "",
         "---",
         "",
+    ]
+    lines.extend([
         f"## {cfg.overview.icon} {cfg.overview.label}",
         "",
         f"**时间范围：** {ov.date_start} - {ov.date_end}",
@@ -146,7 +148,10 @@ def _render_overview(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> lis
         "",
         f"**核心摘要：** {ov.core_summary.strip()}",
         "",
-    ]
+    ])
+    if ov.cover_image:
+        lines.extend([f"![{newsletter.brand_name}封面]({ov.cover_image})", ""])
+    return lines
 
 
 def _resolve_newsletter(report: dict | WeeklyNewsletter | None) -> WeeklyNewsletter:
@@ -372,6 +377,14 @@ def build_export_html(report: dict | WeeklyNewsletter | None = None) -> str:
 </section>
 """
 
+    cover_html = ""
+    if ov.cover_image:
+        src = _image_src_for_html(ov.cover_image, issue_slug)
+        cover_html = (
+            f'<img class="cover-image" src="{escape(src)}" '
+            f'alt="{escape(newsletter.brand_name)}封面">'
+        )
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -386,6 +399,7 @@ def build_export_html(report: dict | WeeklyNewsletter | None = None) -> str:
   }}
   h1 {{ text-align: center; font-size: 28px; margin-bottom: 8px; }}
   hr {{ border: none; border-top: 1px solid #333; margin: 16px 0 24px; }}
+  .cover-image {{ width: 100%; border-radius: 12px; margin: 16px 0 24px; display: block; }}
   h2 {{ font-size: 18px; margin-top: 32px; }}
   h3 {{ font-size: 15px; margin-top: 20px; }}
   h3.date-label {{ color: #007bff; font-weight: 600; }}
@@ -413,6 +427,7 @@ def build_export_html(report: dict | WeeklyNewsletter | None = None) -> str:
       <p><strong>本期编辑：</strong>{escape(ov.editor)}</p>
       <p><strong>核心摘要：</strong>{escape(ov.core_summary)}</p>
     </div>
+    {cover_html}
   </section>
   <section>
     <h2>{cfg.industry.icon} {cfg.industry.label}</h2>

@@ -8,6 +8,7 @@ class OverviewBlock:
     date_end: str
     editor: str
     core_summary: str
+    cover_image: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -19,6 +20,7 @@ class OverviewBlock:
             date_end=data["date_end"],
             editor=data["editor"],
             core_summary=data["core_summary"],
+            cover_image=data.get("cover_image") or "",
         )
 
 
