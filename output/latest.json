@@ -4,247 +4,247 @@
     "date_start": "2026年7月1日",
     "date_end": "2026年7月14日",
     "editor": "产品资讯组",
-    "core_summary": "近两周AI行业进入产品与商业化双重加速期。OpenAI一口气推出GPT-5.6系列、GPT-Live全双工语音与ChatGPT Work智能体工作台，正式从对话助手迈向自主办公Agent；xAI以半价Grok 4.5、DeepSeek再降75%将价格战推向白热化。基础设施层同样激烈：谷歌TPU对外商用直击英伟达，而86%企业GPU利用率不足一半、多模型系统故障率被低估2.25倍等数据揭示落地隐忧。国内方面，阶跃星辰发布AI原生手机STEPX Neo，阿里元境上线60款国产模型聚合平台JellyToken，腾讯混元持续吸纳OpenAI顶尖人才。开源生态、具身智能与主权AI亦在同步推进，行业正从\"炫技\"转向\"编排、评估与治理\"的深水区。",
+    "core_summary": "近两周，AI行业主线正从\"更强模型\"迈向\"更强智能体+更省算力\"。OpenAI密集发布GPT-5.6系列、ChatGPT Work与全双工语音GPT-Live，将办公自动化与自然语音交互推向新高度；xAI Grok 4.5与DeepSeek再度掀起价格战，推理成本成为竞争核心，多模型路由（ACRouter）等编排方案兴起。企业侧，86%GPU利用率不足一半、多模型故障率被低估、\"评估鸿沟\"等问题密集暴露，倒逼可观测性与治理工具升级。国内厂商同步发力：阶跃星辰STEPX Neo开启AI原生手机、高德ABot-World Studio切入世界模型、小米/特斯拉/本田加速车载大模型上车，端侧与具身AI成为新战场。",
     "cover_image": "weekly-2026-07-14/images/cover.png"
   },
   "industry_news": [
     {
       "date_label": "7月14·周二",
-      "title": "Hugging Face 联手 Cerebras 将 Gemma 推向实时语音 AI",
-      "summary": "Hugging Face 与 Cerebras 宣布合作，将谷歌 Gemma 系列模型部署到 Cerebras 的高性能推理硬件上，用于实时语音 AI 场景。借助 Cerebras 的超低延迟推理能力，开发者可在 Hugging Face 平台上构建响应迅速的语音对话应用，显著降低端到端延迟。此举进一步推动开源模型在实时多模态交互领域的落地。",
-      "url": "https://huggingface.co/blog/cerebras-gemma4-voice-ai",
-      "image_url": "",
-      "usage_note": "适合开发者构建低延迟语音对话应用，可在Hugging Face直接调用Cerebras推理加速的Gemma模型"
+      "title": "Anthropic 揭秘 Claude Code 诞生历程",
+      "summary": "Anthropic 发布长文回顾其编程智能体 Claude Code 的开发历程，讲述该工具如何从内部命令行工具演变为面向开发者的核心编程代理产品。研究员、工程师及早期用户分享了产品迭代与落地故事，展示了 Anthropic 在 AI 编码领域的战略布局，也标志着编程智能体正加速成为大模型公司竞争的关键赛道。",
+      "url": "https://www.anthropic.com/features/making-of-claude-code",
+      "image_url": "images/img-0.gif",
+      "usage_note": "面向开发者的命令行编程智能体，可在终端内完成代码生成、重构与调试，适合深度集成到日常开发流程。"
     },
     {
       "date_label": "7月14·周二",
-      "title": "Anthropic揭秘Claude Code诞生历程",
-      "summary": "Anthropic发布深度回顾，讲述Claude Code从内部命令行工具演变为公司旗舰编码智能体的全过程。文章汇集研究人员、工程师及早期用户的第一手叙述，还原了产品迭代、技术突破与团队协作细节，展示了Anthropic在AI编程助手赛道的战略布局，也为业界打造Agent型产品提供了参考范本。",
-      "url": "https://www.anthropic.com/features/making-of-claude-code",
-      "image_url": "images/img-1.gif",
-      "usage_note": "适合团队研究Agent型编码助手的产品化路径，回顾Claude Code从内部工具到旗舰产品的迭代经验"
+      "title": "艾伯塔省政府部署Claude 全面排查政府系统安全漏洞",
+      "summary": "Anthropic发布案例研究，加拿大艾伯塔省政府采用Claude大模型协助识别并修复政府信息系统中的网络安全漏洞。该项目展示了生成式AI在公共部门安全审计、漏洞检测与响应中的实际应用，为政府机构利用大模型强化关键基础设施安全提供了可借鉴的落地范例，也标志着Anthropic在政企安全场景的进一步拓展。",
+      "url": "https://www.anthropic.com/news/alberta-government-claude-cybersecurity",
+      "image_url": "images/img-1.png",
+      "usage_note": "政企安全审计场景可参考：用Claude批量扫描信息系统漏洞、生成修复建议，辅助关键基础设施安全加固。"
     },
     {
       "date_label": "7月13·周一",
-      "title": "Hugging Face联手SkyPilot推出零流量费云存储方案",
-      "summary": "Hugging Face与SkyPilot合作推出全新集成方案，允许开发者在任意云平台运行AI训练与推理任务，同时将数据集与模型直接存储在Hugging Face Hub，实现零出口流量费用。该方案解决了跨云训练中数据迁移成本高昂的痛点，让开发者可自由选择最具性价比的算力资源，同时保持存储的统一性，显著降低多云AI工作流的整体成本。",
-      "url": "https://huggingface.co/blog/skypilot-hf-storage",
-      "image_url": "",
-      "usage_note": "适合多云AI工作流团队，将数据集与模型托管在Hugging Face Hub即可避免跨云出口流量费"
-    },
-    {
-      "date_label": "7月13·周一",
-      "title": "OpenAI 推出 GPT-Live：全双工语音让 ChatGPT 对话更自然",
-      "summary": "OpenAI 发布语音交互重大升级 GPT-Live，采用全双工技术，使 ChatGPT 能像真人一样进行实时对话，支持边听边说、随时打断和自然应答。此次升级显著提升了语音助手的沉浸感与交互流畅度，标志着 AI 语音交互向更拟人化方向迈进，也将进一步加剧与 Google、Meta 等在语音 AI 领域的竞争。",
+      "title": "OpenAI发布GPT-Live：全双工语音让ChatGPT更像真人对话",
+      "summary": "OpenAI推出GPT-Live语音升级，支持全双工交互，用户与ChatGPT可同时说话与倾听，实现打断、插话等自然对话体验。相比传统轮流式语音助手，全双工模式显著提升沟通流畅度和拟人感，标志着语音AI从被动应答迈向主动、自然交互的新阶段，将加速语音助手在客服、陪伴、教育等场景的落地。",
       "url": "/technology/openai-launches-gpt-live-a-full-duplex-voice-upgrade-that-lets-chatgpt-talk-more-like-a-person",
       "image_url": "",
-      "usage_note": "适合语音助手、客服等场景升级，全双工特性让ChatGPT支持边听边说、随时打断"
+      "usage_note": "全双工语音让ChatGPT支持插话与实时打断，适用于客服、语言学习、陪伴等需自然对话体验的场景。"
     },
     {
-      "date_label": "7月12·周日",
-      "title": "英伟达联手Hugging Face发布智能体开放数据集",
-      "summary": "英伟达与Hugging Face合作推出面向AI智能体训练的开放数据集Data for Agents，专门用于提升大模型在工具调用、任务规划和多步推理等智能体场景下的能力。该数据集覆盖多领域任务样本，旨在为开发者构建自主智能体提供高质量训练素材，推动Agent生态从模型能力向数据基础设施的深化，加速开源智能体应用的落地。",
-      "url": "https://huggingface.co/blog/nvidia/open-data-for-agents",
-      "image_url": "",
-      "usage_note": "适合Agent研发团队，用于训练模型的工具调用、任务规划与多步推理能力"
-    },
-    {
-      "date_label": "7月12·周日",
-      "title": "vLLM原生适配Transformers后端，实现推理原生速度",
-      "summary": "HuggingFace与vLLM团队宣布深度整合，使Transformers模型能够直接作为vLLM的建模后端运行，并达到接近原生优化的推理速度。这意味着开发者无需重写代码即可将Transformers生态中的海量模型无缝部署到vLLM高性能推理引擎中，大幅降低了模型落地和服务化的门槛，进一步统一了开源大模型的训练与推理工具链。",
-      "url": "https://huggingface.co/blog/native-speed-vllm-transformers-backend",
-      "image_url": "",
-      "usage_note": "适合模型服务化部署，Transformers模型无需重写即可获得vLLM级推理速度"
-    },
-    {
-      "date_label": "7月11·周六",
-      "title": "Grok 4.5以半价发布，剑指Anthropic与OpenAI",
-      "summary": "xAI正式推出Grok 4.5大模型，定价仅为竞争对手同级产品的一半，直接冲击Anthropic的Claude与OpenAI的GPT系列。此举被视为大模型价格战全面升级的信号，凭借激进定价策略，xAI意图在企业API市场快速抢占份额，并可能迫使头部厂商重新审视其商业化定价模型。",
+      "date_label": "7月13·周一",
+      "title": "Grok 4.5以半价发布，或撼动Anthropic与OpenAI",
+      "summary": "马斯克旗下xAI发布新一代大模型Grok 4.5，定价仅为竞品的一半，直接对标Anthropic的Claude和OpenAI的GPT系列。凭借激进的价格策略和性能升级，Grok意图抢占企业级API市场份额，可能引发新一轮大模型价格战，重塑当前由OpenAI和Anthropic主导的商业化竞争格局。",
       "url": "/technology/spacexs-grok-4-5-launches-at-half-the-price-of-rivals-heres-why-that-could-rattle-anthropic-and-openai",
       "image_url": "",
-      "usage_note": "适合成本敏感的企业API用户，Grok 4.5以竞品一半价格提供同级能力"
+      "usage_note": "定价约为Claude/GPT一半的通用大模型，适合成本敏感的企业API接入与批量推理任务。"
     },
     {
-      "date_label": "7月11·周六",
-      "title": "UST携手Anthropic：Claude赋能物理AI落地工业场景",
-      "summary": "全球数字化转型服务商UST宣布将Anthropic的Claude模型集成至其物理AI解决方案中，用于制造、物流等工业场景的智能自动化。通过将大模型能力与机器人、传感器等物理系统结合，UST希望提升现场决策效率与可靠性。此举标志着Claude正加速从软件领域向具身智能与工业AI延伸，拓展企业级应用边界。",
+      "date_label": "7月12·周日",
+      "title": "UST携手Anthropic，将Claude引入物理AI领域",
+      "summary": "全球数字化转型服务商UST宣布与Anthropic合作，把Claude大模型引入其物理AI（Physical AI）解决方案中，用于赋能制造、物流、能源等实体行业的自动化与智能决策。此次合作标志着大语言模型正从纯数字场景迈向工厂车间与现实设备控制，推动企业级具身智能与工业AI加速落地。",
       "url": "https://www.anthropic.com/news/ust-claude",
-      "image_url": "images/img-7.png",
-      "usage_note": "适合制造与物流企业将Claude嵌入机器人、传感器系统提升现场决策效率"
+      "image_url": "images/img-4.png",
+      "usage_note": "将Claude接入制造、物流、能源等物理AI场景，用于设备智能决策与自动化调度。"
     },
     {
-      "date_label": "7月10·周五",
-      "title": "研究：多模型AI系统故障率被低估2.25倍",
-      "summary": "VentureBeat报道显示，企业在部署多AI模型协同工作的系统时，普遍低估了整体失败率，实际故障率是预估值的2.25倍。随着企业级AI编排（orchestration）架构日益复杂，多模型串联带来的错误累积效应显著放大，凸显了可靠性监测、故障容错和模型治理在生产环境中的紧迫性。",
+      "date_label": "7月12·周日",
+      "title": "研究：多模型部署使企业AI故障率被低估2.25倍",
+      "summary": "VentureBeat报道，企业在生产环境中同时使用多个AI模型时，实际故障率比其预估高出2.25倍。随着企业AI栈日趋复杂，跨模型编排、依赖关系及连锁失效风险被系统性低估，凸显出可观测性、评估体系与容错设计在多模型架构中的重要性，也为AI编排与运维工具市场带来新机遇。",
       "url": "/orchestration/enterprises-using-multiple-ai-models-are-underestimating-failure-rates-by-2-25x",
       "image_url": "",
       "usage_note": ""
     },
     {
-      "date_label": "7月10·周五",
-      "title": "OpenAI推出ChatGPT Work：跨邮件Slack日历的云端AI智能体",
-      "summary": "OpenAI发布面向企业的云端AI智能体ChatGPT Work，可自动处理邮件、Slack消息与日历安排等日常办公任务，实现跨应用协同工作。此举标志着OpenAI正式进军企业生产力赛道，直接挑战微软Copilot和Google Workspace AI，将进一步加速办公场景智能体化落地。",
+      "date_label": "7月11·周六",
+      "title": "OpenAI推出ChatGPT Work：跨邮件、Slack与日历的云端AI智能体",
+      "summary": "OpenAI正式发布ChatGPT Work，一款云端AI智能体，可跨邮件、Slack、日历等办公工具自动执行任务、协调日程与信息处理。此举标志着ChatGPT从对话助手向企业级智能体平台演进，直接切入微软Copilot和Google Workspace的核心场景，加剧办公AI的竞争格局。",
       "url": "/technology/openai-introduces-chatgpt-work-a-cloud-based-ai-agent-that-manages-tasks-across-email-slack-and-calendars",
       "image_url": "",
-      "usage_note": "适合企业办公场景，可跨邮件、Slack、日历自动执行日常协同任务"
+      "usage_note": "跨邮件、Slack、日历的云端办公智能体，适合替代部分助理工作，如日程协调、信息汇总与跨应用任务执行。"
     },
     {
-      "date_label": "7月10·周五",
-      "title": "企业AI陷入\"评估鸿沟\"：智能体自主性狂飙，验证能力却掉队",
-      "summary": "VentureBeat指出，企业级AI正面临一场\"评估鸿沟\"危机：AI智能体的自主决策与执行能力提升速度远超企业对其进行验证、测试和监控的能力。传统评测方法难以覆盖多步骤、动态交互的Agent行为，导致企业在部署时面临可靠性、安全性与合规性风险，亟需建立新一代评估体系与治理框架。",
+      "date_label": "7月11·周六",
+      "title": "企业AI陷入\"评估鸿沟\"：智能体自主性狂飙，验证能力滞后",
+      "summary": "VentureBeat指出，企业级AI正面临评估能力与智能体自主性之间的严重脱节。随着AI Agent能力快速演进、可独立完成复杂任务，企业却缺乏成熟的验证与监控手段来评估其可靠性与安全性。这一\"评估鸿沟\"可能导致部署风险上升，也凸显了AI治理、可观测性与评测工具将成为企业AI落地的关键环节。",
       "url": "/orchestration/enterprise-ai-is-entering-an-evaluation-gap-agents-are-gaining-autonomy-faster-than-companies-can-verify-them",
       "image_url": "",
       "usage_note": ""
     },
     {
-      "date_label": "7月9·周四",
-      "title": "企业GPU利用率堪忧：86%运行在半负载以下",
-      "summary": "一项最新调研显示，86%的企业表示其GPU算力利用率仅为一半或更低，暴露出当前AI基础设施建设中的严重资源浪费问题。在华尔街激烈争论AI基建是否过度投入之际，这一数据为质疑派提供了有力佐证，也凸显出企业在AI编排、调度和运维能力上的短板，未来算力优化与利用效率将成为关键议题。",
+      "date_label": "7月10·周五",
+      "title": "调查揭示：86%企业GPU利用率不足一半",
+      "summary": "在华尔街激烈争论AI基础设施投资是否过热之际，一项面向企业的最新调查给出关键信号：高达86%的受访企业表示其GPU算力实际利用率仅在50%或以下。这一数据表明大量已部署的AI算力资源处于闲置状态，凸显企业在AI编排、调度和工作负载管理上的短板，也为算力供需和资本开支合理性提供了新的讨论依据。",
       "url": "/orchestration/wall-street-is-debating-the-ai-buildout-enterprises-just-answered-86-say-their-gpus-run-at-half-capacity-or-less",
       "image_url": "",
       "usage_note": ""
     },
     {
-      "date_label": "7月9·周四",
+      "date_label": "7月10·周五",
       "title": "谷歌推出TabFM：无需针对性训练即可预测未见过的表格数据",
-      "summary": "谷歌发布表格基础模型TabFM，突破传统机器学习需为每个数据集单独训练的限制，能够直接对从未见过的表格数据进行预测。这一进展将表格数据引入基础模型范式，有望大幅降低企业在结构化数据分析中的建模成本，加速表格AI在金融、医疗等行业的落地应用。",
+      "summary": "谷歌发布了表格基础模型TabFM，无需针对每个数据集单独训练，就能直接对从未见过的表格数据进行预测。该模型将基础模型范式引入结构化表格领域，有望大幅降低企业在数据分析、风控和预测建模中的开发成本，为长期以来以XGBoost等传统方法为主的表格AI市场带来变革。",
       "url": "/technology/googles-tabfm-skips-per-dataset-training-and-still-predicts-on-tables-its-never-seen",
       "image_url": "",
-      "usage_note": "适合金融、医疗等结构化数据场景，无需针对每份表格单独训练即可预测"
+      "usage_note": "无需重新训练即可对新表格数据做预测，适合企业风控、销售预测、数据分析等结构化建模场景。"
     },
     {
-      "date_label": "7月8·周三",
-      "title": "DeepSeek降价75%仍难破百倍成本困局",
-      "summary": "中国AI公司DeepSeek宣布将模型API价格大幅下调75%，进一步加剧全球大模型价格战。然而业内分析指出，即便如此激进的降价，AI推理与训练成本相较传统软件仍高出百倍量级，单纯依靠降价难以从根本上解决大模型商业化的经济性难题，模型架构与算力效率的突破才是关键。",
+      "date_label": "7月10·周五",
+      "title": "DeepSeek大降价75%，但百倍成本难题依然待解",
+      "summary": "中国AI公司DeepSeek再度大幅下调API价格，降幅高达75%，进一步加剧全球大模型价格战。然而分析指出，即便如此，推理阶段的算力开销与真实业务场景之间仍存在约百倍的成本鸿沟，单纯降价难以根本解决大规模部署的经济性问题。此举将持续冲击OpenAI、Anthropic等厂商的定价策略，也促使行业重新思考推理效率与商业模式。",
       "url": "/orchestration/deepseek-cut-prices-75-the-100x-problem-remains",
       "image_url": "",
       "usage_note": ""
     },
     {
-      "date_label": "7月8·周三",
-      "title": "ACRouter智能路由AI模型：成本较纯Opus方案降低2.6倍",
-      "summary": "新型AI编排工具ACRouter可根据任务复杂度自动选择最合适的AI模型，相比仅使用Anthropic Claude Opus的方案，成本效率提升2.6倍。该技术通过智能路由机制，将简单任务分配给轻量模型、复杂任务交由高性能模型处理，为企业在多模型时代的成本控制和性能优化提供了新思路，也反映出模型编排层正成为AI应用落地的关键环节。",
+      "date_label": "7月9·周四",
+      "title": "ACRouter智能路由：按任务选AI模型，成本较Opus单一方案降2.6倍",
+      "summary": "新型AI路由系统ACRouter通过为每个任务智能匹配最合适的AI模型，实现了比单一使用Claude Opus方案成本降低2.6倍的效果。该方案代表了多模型编排的新趋势，企业可根据任务复杂度动态选择模型，在保证质量的同时显著优化推理成本，为AI应用规模化落地提供了更经济的路径。",
       "url": "/orchestration/acrouter-picks-the-smartest-ai-model-per-task-beating-opus-only-setups-by-2-6x-on-cost",
       "image_url": "",
-      "usage_note": "适合多模型部署的企业，通过智能路由把简单任务分配轻量模型以降本"
+      "usage_note": "多模型智能路由工具，可按任务复杂度动态分配模型，帮助企业在保证质量的同时显著降低推理成本。"
     },
     {
-      "date_label": "7月7·周二",
+      "date_label": "7月9·周四",
+      "title": "Meetily开源发布：本地化AI会议助手主打隐私优先",
+      "summary": "Zackriya Solutions推出的开源项目Meetily在GitHub走红，定位为面向macOS和Windows的自托管AI会议记录工具。该项目基于Rust构建，集成Parakeet/Whisper实时转录（速度提升4倍）、说话人分离及Ollama摘要能力，全程100%本地处理、无需上云。在企业对会议数据隐私日益敏感的背景下，此类本地化方案为Otter、Fireflies等云端产品提供了替代选择。",
+      "url": "https://github.com/Zackriya-Solutions/meetily",
+      "image_url": "images/img-12.png",
+      "usage_note": "本地化AI会议助手，支持实时转录、说话人分离与摘要，适合对隐私敏感的企业内部会议记录。"
+    },
+    {
+      "date_label": "7月8·周三",
+      "title": "腾讯云开源CubeSandbox：面向AI Agent的轻量级安全沙箱",
+      "summary": "腾讯云在GitHub开源CubeSandbox项目，定位为面向AI Agent的即时启动、高并发、安全隔离且轻量化的沙箱运行环境。该工具旨在为AI智能体执行代码、调用工具提供安全可控的执行空间，解决Agent在真实环境中执行不可信操作的隔离难题，有助于推动Agent应用在企业级场景的规模化部署。",
+      "url": "https://github.com/TencentCloud/CubeSandbox",
+      "image_url": "",
+      "usage_note": "面向AI Agent的轻量安全沙箱，可为Agent执行代码或调用工具提供隔离环境，适合企业级Agent部署。"
+    },
+    {
+      "date_label": "7月8·周三",
       "title": "德国研究联盟发布开源大模型Soofi S30B-A3B，推动欧洲主权AI",
-      "summary": "德国研究联盟推出开源大模型Soofi S30B-A3B，采用混合专家架构，融合Mamba-2与注意力层，总参数量达316亿，但推理时每token仅激活部分参数，兼顾高性能与高效生成。该模型旨在助力欧洲构建自主可控的主权AI体系，减少对美国厂商的依赖，为开源大模型生态注入新力量。",
+      "summary": "德国研究联盟正式发布开源大模型Soofi S30B-A3B，采用混合专家（MoE）架构，融合Mamba-2与注意力层，总参数量达316亿，推理时每token仅激活部分参数，实现高效生成。该模型旨在助力欧洲构建主权AI能力，减少对美国大模型的依赖，为开源高性能模型生态注入新的力量。",
       "url": "https://www.aibase.com/news/29563",
-      "image_url": "images/img-15.jpg",
-      "usage_note": "适合欧洲开发者与研究机构，316亿参数MoE架构、推理时仅激活部分参数"
+      "image_url": "images/img-14.jpg",
+      "usage_note": "欧洲开源MoE大模型，316亿总参数、推理时激活部分参数，适合追求主权算力与开源可控的欧洲开发者。"
     },
     {
       "date_label": "7月7·周二",
       "title": "阶跃星辰发布首款AI智能体手机STEPX Neo",
-      "summary": "阶跃星辰推出首款大模型原生智能体手机STEPX Neo，搭载自研智能体操作系统Step AOS及系统级个人智能体Amoo，用户可通过自然语言指令实现跨应用自主调度。系统具备长期记忆和端云协同能力，支持灵活任务路由，首批合作方涵盖支付宝、美团、高德、滴滴、京东、百度等主流应用，标志着AI原生手机形态迈出实质性一步。",
+      "summary": "阶跃星辰正式推出首款大模型原生智能体手机STEPX Neo，搭载自研智能体原生操作系统Step AOS，并内置系统级个人智能体Amoo。用户可通过自然语言指令实现跨应用自主调度，系统具备长期记忆和端云协同能力，支持灵活任务路由。首批生态合作伙伴涵盖支付宝、美团、高德、滴滴、京东、百度等主流应用，标志着AI原生手机形态迈出关键一步。",
       "url": "https://mp.weixin.qq.com/s/zJ85sWEPlmGKWSFfGIae1g",
-      "image_url": "images/img-16.jpg",
-      "usage_note": "适合追求AI原生体验的用户，通过自然语言指令跨支付宝、美团等应用自动调度任务"
+      "image_url": "images/img-15.jpg",
+      "usage_note": "AI原生智能体手机，用自然语言即可跨App调度支付宝、美团、高德等主流应用，实现端云协同任务执行。"
     },
     {
-      "date_label": "7月6·周一",
-      "title": "OpenAI发布GPT-5.6系列：Sol、Terra、Luna三款齐上阵",
-      "summary": "OpenAI正式推出新一代大语言模型GPT-5.6系列，包含旗舰款Sol、均衡款Terra和性价比款Luna，API定价梯度覆盖每百万token 1至30美元。在Agents' Last Exam评测中，Sol以53.6分领先Claude Fable 5达13.1分，编程智能体指数创下80分新高，同时大幅降低成本与响应耗时，进一步巩固OpenAI在大模型与智能体赛道的领先地位。",
+      "date_label": "7月7·周二",
+      "title": "OpenAI发布GPT-5.6系列：Sol旗舰模型刷新智能体评测纪录",
+      "summary": "OpenAI正式推出GPT-5.6大语言模型系列，涵盖旗舰版Sol、均衡版Terra和性价比版Luna三款，API定价覆盖每百万token 1至30美元的梯度区间。在Agents' Last Exam评测中，Sol以53.6分超越Claude Fable 5达13.1分，编程智能体指数创下80分新高，同时在成本和响应耗时上均实现大幅优化，进一步巩固OpenAI在智能体领域的领先地位。",
       "url": "https://mp.weixin.qq.com/s/YZdoqo4eWbO1oqcCDujxBA",
-      "image_url": "images/img-17.jpg",
-      "usage_note": "适合按预算分层选型，Sol旗舰、Terra均衡、Luna性价比覆盖1-30美元/百万token"
+      "image_url": "images/img-16.jpg",
+      "usage_note": "OpenAI新一代大模型系列，覆盖旗舰到性价比档位，适合从复杂智能体任务到高频调用场景的分层部署。"
     },
     {
       "date_label": "7月6·周一",
-      "title": "OpenAI发布ChatGPT Work智能体工作台",
-      "summary": "OpenAI推出全新智能体产品ChatGPT Work，由Codex与GPT-5.6驱动，定位为可承担长时间、多步骤复杂任务的AI智能体。产品支持网页、移动和桌面跨平台运行，用户只需一句指令描述目标，即可让AI接管整个工作流程，结合应用与文件上下文自动生成文档、幻灯片、分析报告和网站等成果，标志着ChatGPT从对话助手向自主工作智能体的重要跃迁。",
+      "title": "OpenAI推出ChatGPT Work智能体工作台",
+      "summary": "OpenAI发布全新智能体产品ChatGPT Work，由Codex与GPT-5.6驱动，定位为可承担长时间、多步骤任务的AI智能体，支持跨网页、移动和桌面平台协同工作。用户只需通过单一指令描述目标，AI即可接管整个工作流程，结合应用与文件上下文自动生成文档、幻灯片、分析报告和网站，标志着OpenAI正式进军AI办公自动化赛道。",
       "url": "https://www.ithome.com/0/974/789.htm",
       "image_url": "",
-      "usage_note": "适合处理长时多步任务，一句指令即可自动生成文档、幻灯片、分析报告"
+      "usage_note": "由Codex与GPT-5.6驱动的智能体工作台，可跨端接管多步骤任务，自动生成文档、幻灯片与分析报告。"
     },
     {
-      "date_label": "7月5·周日",
-      "title": "OpenAI发布GPT-Live语音模型：全双工对话与实时同传",
-      "summary": "OpenAI推出新一代语音交互模型GPT-Live，支持实时同声传译和全双工对话，用户可随时插话打断。模型引入自定义推理强度与深度任务委托机制，前台保持流畅语音交互的同时，后台可并行执行联网搜索与复杂推理，并在对话中实时弹出天气、赛事等可视化卡片。这标志着语音AI从被动应答迈向多任务协同的交互新阶段。",
+      "date_label": "7月6·周一",
+      "title": "OpenAI发布新一代语音模型GPT-Live，支持全双工对话与同传",
+      "summary": "OpenAI推出全新语音交互模型GPT-Live，实现实时同声传译和全双工对话，用户可随时插话打断。该模型支持自定义推理强度，并引入深度任务委托机制：前台保持流畅语音交互的同时，后台可并行处理联网搜索、复杂推理等任务，还能在对话中实时弹出天气、赛事等可视化卡片，显著提升语音AI交互体验。",
       "url": "https://mp.weixin.qq.com/s/UKbOCJcDJp9D3RSS9CTu9g",
-      "image_url": "images/img-19.jpg",
-      "usage_note": "适合实时同传与语音助手场景，支持全双工插话及可视化卡片弹出"
+      "image_url": "images/img-18.jpg",
+      "usage_note": "支持全双工对话与同声传译的语音模型，可后台并行调用搜索与推理，适合会议、跨语言沟通与语音助手。"
     },
     {
       "date_label": "7月5·周日",
-      "title": "阿里元境发布JellyToken：一站式聚合60余款国产大模型",
-      "summary": "阿里元境正式推出AI大模型API聚合平台JellyToken（智渲云），开发者仅需一个API Key即可调用通义千问、DeepSeek、豆包、智谱、月之暗面等60余款国产主流模型，覆盖文本、图像、视频、音频四大场景。平台提供智能路由、负载均衡、Token级精准计费及正规发票等企业级能力，显著降低多模型接入门槛与运维成本，加速国产大模型在企业场景的规模化落地。",
+      "title": "阿里元境推出JellyToken：一站式聚合60余款国产大模型",
+      "summary": "阿里元境正式上线JellyToken（智渲云）AI大模型API聚合平台，用户仅需一个API Key即可调用通义千问、DeepSeek、豆包、智谱、月之暗面等60余款国产模型，覆盖文本、图像、视频、音频四大场景。平台提供智能路由、负载均衡、Token级精准计费及正规发票等企业级能力，显著降低开发者与企业多模型接入门槛与运维成本。",
       "url": "https://ai-bot.cn/jellytoken/",
-      "image_url": "images/img-20.png",
-      "usage_note": "适合国内企业开发者，一个API Key即可调用60余款国产大模型并支持精准计费"
+      "image_url": "images/img-19.png",
+      "usage_note": "一站式聚合60余款国产大模型的API平台，一个Key即可调用通义、DeepSeek、豆包等模型，降低多模型接入成本。"
     },
     {
       "date_label": "7月5·周日",
-      "title": "Anthropic进军印度市场，Claude推出卢比计价服务",
-      "summary": "11月13日，Anthropic在印度正式推出Claude本地化卢比计价服务，覆盖官网及移动应用。印度是其全球第二大市场，用户占比达5.8%。Claude Pro月费2000卢比（约21美元），Max版起价11999卢比，团队套餐每席2399卢比。此举被视为Anthropic抢滩OpenAI核心海外市场、加速全球化布局的重要一步，进一步加剧两大AI巨头在新兴市场的正面竞争。",
-      "url": "https://www.aibase.com/news/29562",
+      "title": "高德发布ABot-World Studio：交互式AI世界生成开放测试",
+      "summary": "高德正式推出通用世界模型工坊ABot-World Studio，首次将交互式视频生成与3DGS三维场景生成整合于同一平台。用户仅需输入文字或图像，即可生成可交互、可分享的AI虚拟世界，并支持导出视频与3DGS文件。该模型可在单卡RTX 5090上本地部署，架构层面不设推理限制，标志着国内在世界模型与3D生成融合领域迈出重要一步。",
+      "url": "https://www.aibase.com/news/29581",
+      "image_url": "images/img-20.jpg",
+      "usage_note": "输入文字或图像即可生成可交互3D世界，支持单卡RTX 5090本地部署，适合游戏原型、虚拟展示等场景。"
+    },
+    {
+      "date_label": "7月5·周日",
+      "title": "西湖大学联手达摩院发布干细胞AI模型「归元」",
+      "summary": "西湖大学与阿里达摩院联合推出干细胞AI模型「归元」，针对干细胞重编程长期依赖经验试错、成本高、成功率低的行业痛点，构建了涵盖25种调控因子、近400万种潜在组合的大规模扰动数据集。模型采用双模态编码策略，可精准预测不同因子组合对细胞的重编程效果，为再生医学与细胞治疗提供了高效的AI驱动新路径。",
+      "url": "https://www.aibase.com/news/29579",
       "image_url": "images/img-21.jpg",
+      "usage_note": "干细胞重编程AI模型，可预测调控因子组合效果，为再生医学与细胞治疗提供高效筛选工具。"
+    },
+    {
+      "date_label": "7月4·周六",
+      "title": "软银携手Sierra 将AI客服代理引入日本市场",
+      "summary": "软银集团7月14日宣布与美国AI初创公司Sierra达成战略合作，并成为其在日本的独家合作伙伴，共同推出基于智能AI代理的新一代客服解决方案。软银旗下线上品牌Linemo已率先接入该技术，后续将扩展至软银、Y!mobile等核心品牌及其他业务线。此举标志着大模型智能客服正式进入日本主流电信市场。",
+      "url": "https://www.aibase.com/news/29568",
+      "image_url": "images/img-22.jpg",
       "usage_note": ""
     },
     {
       "date_label": "7月4·周六",
-      "title": "前OpenAI研究员田永龙加盟腾讯混元多模态团队",
-      "summary": "据消息人士透露，前OpenAI研究员田永龙已加入腾讯，预计将主导混元多模态模型研发方向，重点聚焦视觉语言模型（VLMs）。若消息属实，他将成为继首席AI科学家姚顺宇之后，又一位从OpenAI转投腾讯混元的核心研究人才。此次人事变动凸显腾讯在多模态大模型领域的持续加码，也反映出中国科技巨头正加速吸纳海外顶尖AI人才。",
-      "url": "https://xix.ai/zh/ainews/former-openai-researcher-tian-yonglong-to-join-tencent-hunyuan-multimodal-team.html",
-      "image_url": "images/img-22.webp",
-      "usage_note": ""
-    },
-    {
-      "date_label": "7月4·周六",
-      "title": "小米YU7标准版搭载XLA认知大模型，场景识别准确率超97%",
-      "summary": "小米汽车5月31日回应市场关注，确认YU7标准版将搭载最新的小米XLA认知大模型，实际场景识别准确率超过97%。硬件方面配备700 TOPS雷神芯片、激光雷达及4D毫米波雷达，支持智能驾驶持续进化。此举标志着小米在智能汽车AI大模型和自动驾驶领域的深入布局，加剧了车企在底层AI能力上的竞争。",
-      "url": "https://xix.ai/zh/ainews/xiaomi-yu7-standard-edition-features-latest-xla-cognitive-large-model-realworld-range-achievement-rate-exceeds-97.html",
+      "title": "特斯拉中国接入豆包大模型，车载语音助手迎智能升级",
+      "summary": "在2026火山引擎原生动力大会上，特斯拉中国宣布其车载交互系统将通过OTA更新深度集成字节跳动豆包大模型。升级后，车主可通过方向盘按键或'嘿，特斯拉'唤醒语音助手，突破传统指令式交互，实现对车辆的全面智能控制。此次合作是特斯拉在华本土化AI布局的重要一步，也标志着国产大模型加速切入头部智能汽车生态。",
+      "url": "https://xix.ai/zh/ainews/tesla-infotainment-system-gets-smart-brain-with-doubao-large-model-integration.html",
       "image_url": "images/img-23.webp",
-      "usage_note": "适合关注车载AI的用户，YU7标准版XLA大模型场景识别准确率超97%"
+      "usage_note": "特斯拉车载语音助手接入豆包大模型，唤醒后可用自然语言实现车辆控制，突破传统指令式交互。"
     },
     {
       "date_label": "7月3·周五",
-      "title": "PhysBrain 1.0发布：全球首个基于人类学习范式的具身智能基础模型",
-      "summary": "3月27日中关村论坛上，深度机器智能公司发布全球首个基于人类学习范式的具身通用智能基础模型PhysBrain 1.0。该模型采用创新的多模态大模型架构，将物理常识嵌入参数中，使机器人具备物理世界认知能力。这标志着具身智能从\"动作模仿\"迈向\"原理解构\"的新阶段，为通用机器人发展提供了新的技术路径。",
-      "url": "https://xix.ai/zh/ainews/human-learning-paradigm-debuts-deep-machine-intelligences-physbrain-10-gives-robots-physical-common-sense.html",
+      "title": "前OpenAI研究员田永龙加盟腾讯混元多模态团队",
+      "summary": "据报道，前OpenAI研究员田永龙已加入腾讯，预计将领导混元大模型的多模态研发方向，重点聚焦视觉语言模型（VLM）。他将成为继首席AI科学家姚顺宇之后，又一位从OpenAI回流至腾讯的核心研究人才，两人曾在OpenAI共事并参与GPT系列研发。此次人事变动凸显腾讯在多模态大模型领域的持续加码，也反映出中美顶尖AI人才流动的新趋势。",
+      "url": "https://xix.ai/zh/ainews/former-openai-researcher-tian-yonglong-to-join-tencent-hunyuan-multimodal-team.html",
       "image_url": "images/img-24.webp",
-      "usage_note": "适合机器人研究团队，将物理常识嵌入参数使机器人具备物理世界认知能力"
+      "usage_note": ""
     },
     {
       "date_label": "7月3·周五",
-      "title": "谷歌TPU转向对外商用，正面挑战英伟达AI芯片霸权",
-      "summary": "谷歌调整TPU战略，将原本自用的AI芯片对外商业化，携手博通面向Anthropic等客户提供AI基础设施服务，直接冲击英伟达高达86%的市场份额。凭借成本控制与系统级集成优势，谷歌TPU商业化进程明显提速，有望打破英伟达在AI训练与推理芯片领域的垄断地位，重塑全球AI算力竞争格局。",
-      "url": "https://www.aibase.com/news/29570",
-      "image_url": "images/img-25.jpg",
+      "title": "小米YU7标配XLA认知大模型，场景识别准确率超97%",
+      "summary": "小米汽车在最新'答网民问'专栏中确认，YU7标准版将搭载全新的'小米XLA认知大模型'，实际场景识别准确率超过97%。硬件方面毫不妥协，标配700 TOPS的'雷神'芯片、激光雷达和4D毫米波雷达等顶配传感器。此举显示小米在智能驾驶领域全系高配的策略，进一步加剧新能源智能汽车行业在AI大模型和算力硬件层面的竞争。",
+      "url": "https://xix.ai/zh/ainews/xiaomi-yu7-standard-edition-features-latest-xla-cognitive-large-model-realworld-range-achievement-rate-exceeds-97.html",
+      "image_url": "images/img-25.webp",
+      "usage_note": "小米YU7标配的智能驾驶认知大模型，场景识别准确率超97%，配合700 TOPS雷神芯片与激光雷达。"
+    },
+    {
+      "date_label": "7月2·周四",
+      "title": "三星重返PC芯片市场，AI加速器GAIA已送样联想惠普",
+      "summary": "三星电子宣布进军AI PC芯片市场，自研加速器处理器GAIA已生产原型样品并送往联想、惠普等主要PC厂商测试，进入性能验证阶段，计划于2027年量产。该芯片由系统LSI部门开发，采用4纳米工艺，核心架构围绕NPU构建，专为加速生成式AI工作负载设计。此举标志着三星时隔多年重返PC处理器市场，将与高通、英特尔、AMD在AI PC芯片领域展开正面竞争。",
+      "url": "https://xix.ai/zh/ainews/samsung-returns-to-pc-chip-market-sends-ai-chip-gaia-to-lenovo-hp-for-testing-mass-production-in-2027.html",
+      "image_url": "images/img-26.webp",
       "usage_note": ""
     },
     {
       "date_label": "7月2·周四",
-      "title": "16位诺奖得主领衔200余专家联署：AI须向善发展",
-      "summary": "包括16位诺贝尔奖得主在内的200多名顶尖学者与AI专家联合发布声明，呼吁国际社会深入研究人工智能的社会影响，并采取行动确保AI朝有利于人类的方向发展。联署方警告，未来十年AI将变得极其强大，其引发的经济变革规模将超越工业革命，但完成时间却大幅缩短，人类社会应对准备严重不足。",
-      "url": "https://www.aibase.com/news/29569",
-      "image_url": "images/img-26.jpg",
-      "usage_note": ""
-    },
-    {
-      "date_label": "7月2·周四",
-      "title": "阿尔伯塔省政府部署Claude加固政务网络安全",
-      "summary": "Anthropic发布案例研究，加拿大阿尔伯塔省政府将Claude应用于政务系统的网络安全漏洞发现与修复，覆盖多个政府部门。借助AI辅助的自动化安全审计，该省显著提升了漏洞识别效率与响应速度，为公共部门大规模引入生成式AI进行安全防护提供了新样本，也彰显了Claude在政企级安全场景中的落地能力。",
-      "url": "https://www.anthropic.com/news/alberta-government-claude-cybersecurity",
-      "image_url": "images/img-27.png",
-      "usage_note": ""
-    },
-    {
-      "date_label": "7月1·周三",
       "title": "伯南克加入Anthropic长期利益信托",
-      "summary": "Anthropic宣布任命前美联储主席本·伯南克加入其长期利益信托（LTBT）。该信托是Anthropic独特治理结构的核心，负责监督公司使命与安全承诺的执行。伯南克在宏观经济政策和风险治理方面的丰富经验，将助力Anthropic在AI快速发展中平衡商业利益与长期社会责任，进一步强化其在AI安全领域的治理公信力。",
+      "summary": "美国前联邦储备委员会主席本·伯南克正式加入Anthropic的长期利益信托（LTBT）。该信托是Anthropic独特的治理机制，旨在确保公司使命聚焦于AI安全与长期公共利益。伯南克的加入将为这家AI安全公司带来宏观经济和公共政策领域的顶级专业视角，进一步强化其治理架构的权威性与独立性。",
       "url": "https://www.anthropic.com/news/ben-bernanke",
-      "image_url": "images/img-28.jpg",
+      "image_url": "images/img-27.jpg",
       "usage_note": ""
     },
     {
       "date_label": "7月1·周三",
-      "title": "前博世工程师创业：用合成数据打造触觉大模型",
-      "summary": "36氪独家报道，一位前博世自动驾驶算法工程师近日创业，聚焦机器人触觉大模型领域，采用\"合成数据+触觉模型\"的技术路线，试图填补当前机器人\"大脑\"在触觉感知维度的空白。触觉数据长期是具身智能发展的短板，合成数据方案有望突破真实数据采集成本高、规模小的瓶颈，为人形机器人和灵巧手操作提供关键能力支撑。",
-      "url": "https://36kr.com/p/3894821059918855?f=rss",
+      "title": "Desktop Commander MCP：为Claude赋予终端与文件系统操控能力",
+      "summary": "开源项目Desktop Commander MCP在GitHub上受到关注，它是一款面向Claude的MCP（模型上下文协议）服务器，为其提供终端命令执行、文件系统搜索及差异化文件编辑能力。该工具让Claude能够直接操作本地开发环境，扩展了AI助手在编码与自动化任务中的实用性，是MCP生态快速发展的又一典型案例。",
+      "url": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
+      "image_url": "images/img-28.png",
+      "usage_note": "MCP服务器项目，为Claude提供终端命令、文件搜索与差异化编辑能力，适合打造本地代码与自动化助手。"
+    },
+    {
+      "date_label": "7月1·周三",
+      "title": "面壁智能CTO曾国洋：押注端侧AI，推动大模型落地手机与汽车",
+      "summary": "面壁智能选择差异化路线，专注端侧AI，将大模型压缩部署到手机、汽车等终端设备。28岁的CTO曾国洋此前曾主导训练中国首个大语言模型CPM-1，如今带领团队攻关轻量化技术，推动智能能力向移动端下沉，为行业提供云端之外的另一种发展路径。",
+      "url": "https://www.aibase.com/news/29578",
       "image_url": "images/img-29.png",
       "usage_note": ""
     }
@@ -253,53 +253,53 @@
     "title_suffix": "三大趋势",
     "trends": [
       {
-        "index": 27,
-        "title": "对话助手全面Agent化",
-        "body": "OpenAI ChatGPT Work、阶跃星辰STEPX Neo、UST工业Claude共同印证：AI正从被动应答升级为可跨应用、跨设备执行长任务的自主智能体，办公、手机、工业现场成为Agent落地的三大主战场。"
+        "index": 28,
+        "title": "智能体从对话走向接管工作流",
+        "body": "OpenAI ChatGPT Work、Claude Code及阶跃STEPX Neo集中登场，AI从被动应答转向长时间、多步骤自主执行，覆盖办公、编程与手机操作系统，标志着智能体正式成为大模型公司下一轮竞争主战场。"
       },
       {
-        "index": 9,
-        "title": "价格战与算力效率并行",
-        "body": "Grok 4.5半价、DeepSeek再降75%将大模型API推入白热化竞争；同时谷歌TPU商用挑战英伟达、ACRouter智能路由降本2.6倍，显示单纯降价难解成本困局，架构与编排效率成为破局关键。"
+        "index": 16,
+        "title": "价格战与多模型编排重塑成本结构",
+        "body": "Grok 4.5半价切入、DeepSeek再降75%，叠加ACRouter等智能路由方案，行业正从\"堆参数\"转向\"按任务选模型\"。推理经济性成为企业落地关键，多模型编排、可观测性与评估工具进入爆发期。"
       },
       {
-        "index": 18,
-        "title": "编排、评估与治理成新瓶颈",
-        "body": "多模型系统故障率被低估2.25倍、86%企业GPU半负载运行、Agent自主性远超验证能力，行业共识正从\"能不能做\"转向\"敢不敢用\"，评估框架、模型治理与算力调度成为企业AI落地的核心命题。"
+        "index": 26,
+        "title": "端侧与具身AI加速落地",
+        "body": "阶跃STEPX Neo、小米XLA、特斯拉接入豆包、本田P7 OTA上车，加上UST将Claude引入物理AI、三星GAIA重返PC芯片，大模型正从云端下沉至手机、汽车与工厂设备，端云协同成为新范式。"
       }
     ],
     "feasibility": [
       {
-        "index": 26,
-        "title": "分层选型与多模型编排",
+        "index": 17,
+        "title": "企业多模型编排与成本优化",
         "bullets": [
-          "**成本控制：** 参考GPT-5.6 Sol/Terra/Luna分层定价，按任务复杂度组合调用",
-          "**智能路由：** 引入ACRouter类工具将简单任务下沉轻量模型，可降本约2.6倍",
-          "**国产聚合：** JellyToken一Key调用60款国产模型，适合合规敏感场景"
-        ]
-      },
-      {
-        "index": 27,
-        "title": "企业办公Agent落地",
-        "bullets": [
-          "**跨应用协同：** ChatGPT Work可打通邮件、Slack、日历，替代重复性协作",
-          "**长任务托管：** 由Codex+GPT-5.6驱动，一句指令生成文档、报表、网站",
-          "**评估先行：** 部署前建立Agent行为验证与监控体系，规避可靠性风险"
+          "**智能路由：** 参考ACRouter按任务难度分配模型，成本可降至单一Opus方案的1/2.6",
+          "**API聚合：** 采用JellyToken等平台统一接入国产多模型，降低运维与切换成本",
+          "**GPU治理：** 针对86%利用率不足问题，引入编排调度与工作负载管理工具释放闲置算力"
         ]
       },
       {
         "index": 28,
-        "title": "实时语音与多模态交互",
+        "title": "办公与个人生产力智能体",
         "bullets": [
-          "**全双工体验：** GPT-Live支持边听边说与随时打断，适配客服、陪伴场景",
-          "**开源方案：** Hugging Face+Cerebras将Gemma部署至低延迟硬件，降低自建门槛",
-          "**车载落地：** 广汽本田P7、小米YU7等已把大模型接入座舱，声音克隆与场景识别成新卖点"
+          "**跨应用协同：** 用ChatGPT Work接管邮件、Slack、日历的多步骤任务",
+          "**本地隐私优先：** 部署Meetily等自托管会议助手，兼顾转录效率与数据合规",
+          "**开发环境增强：** 结合Claude Code与Desktop Commander MCP，让AI直接操作终端与文件系统"
+        ]
+      },
+      {
+        "index": 33,
+        "title": "行业专用与具身智能落地",
+        "bullets": [
+          "**科研加速：** 参照「归元」模型，用AI预测干细胞重编程组合，压缩试错成本",
+          "**结构化数据：** 引入TabFM等表格基础模型，替代部分XGBoost场景实现零训练预测",
+          "**智能座舱与车控：** 借鉴小米XLA、特斯拉接入豆包路径，将大模型深度融入车载交互与感知决策"
         ]
       }
     ]
   },
   "date": "2026-07-14",
-  "generated_at": "2026-07-14 10:46:03",
+  "generated_at": "2026-07-14 16:25:56",
   "issue_number": 0,
   "period_start": "2026年7月1日",
   "period_end": "2026年7月14日",
