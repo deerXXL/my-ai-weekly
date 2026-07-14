@@ -1,5 +1,9 @@
 name: Generate AI Weekly
 
+# 授予 workflow 写入权限：Commit 步骤需要 git push 回仓库
+permissions:
+  contents: write
+
 on:
   schedule:
     # 每天北京时间上午9点
@@ -75,4 +79,4 @@ jobs:
           git add .
           git commit -m "Auto update weekly" || echo "No changes"
 
-          git push
+          git push https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git HEAD:main
