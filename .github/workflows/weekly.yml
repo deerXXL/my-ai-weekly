@@ -34,5 +34,7 @@ jobs:
           ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
           ARK_BASE_URL: ${{ secrets.ARK_BASE_URL }}
           ARK_MODEL: ${{ secrets.ARK_MODEL }}
+          ARK_IMAGE_BASE_URL: https://ark.cn-beijing.volces.com/api/v3
+          ARK_IMAGE_MODEL: doubao-seedream-4-5-251128
         run: |
           python generate_weekly.py --days 14

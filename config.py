@@ -36,7 +36,10 @@ OUTPUT_DIR = BASE_DIR / "output"
 NEWSLETTER_CONFIG_PATH = BASE_DIR / "config" / "newsletter.json"
 
 ARK_API_KEY = os.getenv("ARK_API_KEY")
-ARK_BASE_URL = os.getenv("ARK_BASE_URL")
+ARK_BASE_URL = os.getenv(
+    "ARK_BASE_URL",
+    "https://ark.cn-beijing.volces.com/api/v3"
+)
 ARK_MODEL = os.getenv("ARK_MODEL")
 ARK_IMAGE_BASE_URL = os.getenv(
     "ARK_IMAGE_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3"
