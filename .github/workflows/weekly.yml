@@ -31,7 +31,6 @@ jobs:
 
       - name: Generate Weekly
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
           ARK_BASE_URL: ${{ secrets.ARK_BASE_URL }}
           ARK_MODEL: ${{ secrets.ARK_MODEL }}
