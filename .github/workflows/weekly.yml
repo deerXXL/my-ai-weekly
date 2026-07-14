@@ -13,6 +13,20 @@ jobs:
   generate:
     runs-on: ubuntu-latest
 
+    # env 必须在 job 级别，Verify 与 Generate 两个步骤才能共享同一套变量。
+    # 若只挂在某个 step 上，其他 step 读不到 $ARK_API_KEY，诊断会被误判为空。
+    env:
+      # CI 配置必须与本地 .env 完全一致（本地已验证可跑通）。
+      # 关键：端点用 coding 端点 /api/coding/v3 + ark-code-latest，
+      # 不是标准 /api/v3。用 ARK Key 请求错误端点会 401。
+      # 只有 ARK_API_KEY 走 secrets；其余用字面量，避免 secret 不存在时
+      # 展开为空字符串 → OpenAI SDK 回退到 https://api.openai.com/v1 → 401。
+      ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
+      ARK_BASE_URL: https://ark.cn-beijing.volces.com/api/coding/v3
+      ARK_MODEL: ark-code-latest
+      ARK_IMAGE_BASE_URL: https://ark.cn-beijing.volces.com/api/v3
+      ARK_IMAGE_MODEL: doubao-seedream-4-5-251128
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,16 +64,5 @@ jobs:
           echo "::endgroup::"
 
       - name: Generate Weekly
-        env:
-          # CI 配置必须与本地 .env 完全一致（本地已验证可跑通）。
-          # 关键：端点用 coding 端点 /api/coding/v3 + ark-code-latest，
-          # 不是标准 /api/v3。用 ARK Key 请求错误端点会 401。
-          # 只有 ARK_API_KEY 走 secrets；其余用字面量，避免 secret 不存在时
-          # 展开为空字符串 → OpenAI SDK 回退到 https://api.openai.com/v1 → 401。
-          ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
-          ARK_BASE_URL: https://ark.cn-beijing.volces.com/api/coding/v3
-          ARK_MODEL: ark-code-latest
-          ARK_IMAGE_BASE_URL: https://ark.cn-beijing.volces.com/api/v3
-          ARK_IMAGE_MODEL: doubao-seedream-4-5-251128
         run: |
           python generate_weekly.py --days 14
