@@ -32,5 +32,7 @@ jobs:
       - name: Generate Weekly
         env:
           ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
+          ARK_BASE_URL: ${{ secrets.ARK_BASE_URL }}
+          ARK_MODEL: ${{ secrets.ARK_MODEL }}
         run: |
           python generate_weekly.py --days 14
