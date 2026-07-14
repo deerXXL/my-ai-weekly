@@ -19,6 +19,12 @@ _image_client: OpenAI | None = None
 def _get_image_client() -> OpenAI:
     global _image_client
     if _image_client is None:
+        # 运行时校验：防止 ARK_IMAGE_BASE_URL 异常时打到 OpenAI 官方端点
+        if not ARK_IMAGE_BASE_URL or not ARK_IMAGE_BASE_URL.startswith("https://ark"):
+            raise RuntimeError(
+                f"ARK_IMAGE_BASE_URL 异常：{ARK_IMAGE_BASE_URL!r}。"
+                "必须以 https://ark 开头（火山方舟端点）。"
+            )
         _image_client = OpenAI(api_key=ARK_API_KEY, base_url=ARK_IMAGE_BASE_URL)
     return _image_client
 

@@ -10,6 +10,15 @@ from config import ARK_API_KEY, ARK_BASE_URL, ARK_MODEL
 # config.py 已在导入期校验 key/base_url，这里仅留一道兜底，避免误用空值
 if not ARK_API_KEY:
     raise RuntimeError("ARK_API_KEY 为空，无法初始化 LLM client")
+
+# 运行时二次校验：防止 base_url 被意外覆盖/清空后静默打到 OpenAI 官方端点
+if not ARK_BASE_URL or not ARK_BASE_URL.startswith("https://ark"):
+    raise RuntimeError(
+        f"ARK_BASE_URL 异常：{ARK_BASE_URL!r}。"
+        "必须以 https://ark 开头（火山方舟端点），否则会用 ARK Key 请求 "
+        "OpenAI 官方端点 (https://api.openai.com/v1) 导致 401。"
+    )
+
 client = OpenAI(api_key=ARK_API_KEY, base_url=ARK_BASE_URL)
 print(f"[llm] OpenAI client 初始化完成：base_url={ARK_BASE_URL} model={ARK_MODEL}")
 

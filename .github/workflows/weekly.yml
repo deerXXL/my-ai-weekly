@@ -29,6 +29,26 @@ jobs:
           pip install -r requirements.txt
 
 
+      - name: Verify API config
+        run: |
+          echo "::group::🔑 API 配置诊断（key 已脱敏）"
+          if [ -z "$ARK_API_KEY" ]; then
+            echo "::error::ARK_API_KEY 为空！请在 Settings → Secrets → Actions 中配置 ARK_API_KEY"
+            exit 1
+          fi
+          MASKED_KEY="${ARK_API_KEY:0:4}***${ARK_API_KEY: -4}"
+          echo "ARK_API_KEY=$MASKED_KEY"
+          echo "ARK_BASE_URL=${ARK_BASE_URL:-<EMPTY>}"
+          echo "ARK_MODEL=${ARK_MODEL:-<EMPTY>}"
+          echo "ARK_IMAGE_BASE_URL=${ARK_IMAGE_BASE_URL:-<EMPTY>}"
+          echo "ARK_IMAGE_MODEL=${ARK_IMAGE_MODEL:-<EMPTY>}"
+          # 关键校验：防止请求打到 OpenAI 官方端点（用 ARK Key 会 401）
+          if [[ "$ARK_BASE_URL" != https://ark.* ]]; then
+            echo "::error::ARK_BASE_URL 异常: '$ARK_BASE_URL'。必须以 https://ark 开头（火山方舟端点），否则会用 ARK Key 请求 OpenAI 官方端点导致 401"
+            exit 1
+          fi
+          echo "::endgroup::"
+
       - name: Generate Weekly
         env:
           # CI 配置必须与本地 .env 完全一致（本地已验证可跑通）。

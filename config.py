@@ -61,13 +61,20 @@ ARK_IMAGE_MODEL = _getenv("ARK_IMAGE_MODEL", "doubao-seedream-4-5-251128")
 
 # 启动期诊断：避免 Key/端点缺失时静默打到 OpenAI 官方端点（会导致 401 误判）
 _masked_key = (ARK_API_KEY[:6] + "***" + ARK_API_KEY[-4:]) if ARK_API_KEY else "<EMPTY>"
-print(
+_diag_msg = (
     f"[config] ARK_API_KEY={_masked_key} "
     f"ARK_BASE_URL={ARK_BASE_URL or '<EMPTY>'} "
     f"ARK_MODEL={ARK_MODEL or '<EMPTY>'} "
     f"ARK_IMAGE_BASE_URL={ARK_IMAGE_BASE_URL or '<EMPTY>'} "
     f"ARK_IMAGE_MODEL={ARK_IMAGE_MODEL}"
 )
+print(_diag_msg)
+# 同时写 stderr，确保 CI 日志中可见（stdout 可能被缓冲/截断）
+import sys
+print(_diag_msg, file=sys.stderr)
+# CI 环境下额外用 ::warning:: 注解，在 GitHub Actions 摘要页高亮显示
+if os.getenv("GITHUB_ACTIONS") == "true":
+    print(f"::warning:: {_diag_msg}", file=sys.stderr)
 
 if not ARK_API_KEY:
     raise RuntimeError(
