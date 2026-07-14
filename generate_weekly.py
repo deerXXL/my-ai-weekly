@@ -21,7 +21,7 @@ def main():
     args = parser.parse_args()
 
     print(f"Starting AI weekly report generation... (days={args.days}, mode={args.mode})")
-    report = run_pipeline(days=args.days, mode=args.mode)
+    report = run_pipeline()
     write_markdown(report)
     write_json(report)
     print("Weekly report generated.")

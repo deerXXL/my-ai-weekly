@@ -1,0 +1,36 @@
+name: Generate AI Weekly
+
+on:
+  schedule:
+    # 每天北京时间上午9点
+    # GitHub Actions 使用 UTC，所以是 1 点
+    - cron: "0 1 * * *"
+
+  workflow_dispatch:
+
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+
+      - name: Generate Weekly
+        env:
+          ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
+        run: |
+          python generate_weekly.py --days 14
