@@ -7,7 +7,11 @@ from app.models.raw_item import RawItem
 from app.models.signal_card import SignalCard
 from config import ARK_API_KEY, ARK_BASE_URL, ARK_MODEL
 
+# config.py 已在导入期校验 key/base_url，这里仅留一道兜底，避免误用空值
+if not ARK_API_KEY:
+    raise RuntimeError("ARK_API_KEY 为空，无法初始化 LLM client")
 client = OpenAI(api_key=ARK_API_KEY, base_url=ARK_BASE_URL)
+print(f"[llm] OpenAI client 初始化完成：base_url={ARK_BASE_URL} model={ARK_MODEL}")
 
 PROMPTS_DIR = Path("prompts")
 
