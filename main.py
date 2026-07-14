@@ -15,7 +15,7 @@ def main():
         action="store_true",
         help="跳过生成，仅启动本地 HTML 预览服务",
     )
-    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=5000)
     args = parser.parse_args()
 

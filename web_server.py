@@ -447,8 +447,12 @@ def serve_issue_files(issue_id: str, filepath: str):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if __name__ == "__main__":
+        app.run(
+            host="0.0.0.0",
+            port=5000,
+            debug=False
+    )
 
-from flask import send_from_directory
 
 

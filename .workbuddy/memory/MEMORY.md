@@ -12,3 +12,8 @@
 ## 启动方式
 - 入口：`web_app.py`（`use_reloader=False`）；`web_server.py` 内 `app.run(debug=True)`。
 - 依赖隔离：在 managed venv（`python -m venv .../envs/default`）装 `python-dotenv`、`flask` 后可直接跑。
+
+## 邮件发送（send_md_email.py）
+- 附件路径格式：`output/weekly-YYYY-MM-DD/newsletter.md`（不是 `output/weekly-YYYY-MM-DD.md`）。
+- QQ邮箱 SMTP 需要 `port=465, smtp_ssl=True`。
+- yagmail 依赖链：`yagmail` → `premailer` → `cssutils` → `more-itertools`，缺 `more-itertools` 会报 `ModuleNotFoundError`。

@@ -13,7 +13,10 @@ venv/
 env/
 
 # 生成产物
-output/
+# 生成产物
+output/*
+!output/latest.json
+!output/weekly-*/
 daily_report_*.md
 
 # IDE / 系统
