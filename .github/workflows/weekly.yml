@@ -66,3 +66,13 @@ jobs:
       - name: Generate Weekly
         run: |
           python generate_weekly.py --days 14
+
+      - name: Commit generated files
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git add .
+          git commit -m "Auto update weekly" || echo "No changes"
+
+          git push
