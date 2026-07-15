@@ -87,14 +87,14 @@ class NewsletterBuilderTests(unittest.TestCase):
 
     def test_trend_body_indented(self):
         match = re.search(
-            r"1\. \*\*AI变得更「懂行」\*\*\n\n(    .+)",
+            r"\*\*AI变得更「懂行」\*\*\n\n(    .+)",
             self.markdown,
         )
         self.assertIsNotNone(match, "趋势正文应使用 4 空格缩进")
 
     def test_feasibility_bullets_indented(self):
         chunk = self.markdown.split("### 🔮 可行性思考", 1)[1]
-        self.assertRegex(chunk, r"1\. \*\*.+\*\*\n\n    - ")
+        self.assertRegex(chunk, r"\*\*.+\*\*\n\n    - ")
 
     def test_html_export(self):
         html = build_export_html(self.newsletter)

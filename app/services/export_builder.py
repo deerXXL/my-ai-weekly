@@ -294,7 +294,7 @@ def _render_tech_summary(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) ->
     ]
     for trend in tech.trends:
         lines.extend([
-            f"{trend.index}. **{trend.title}**",
+            f"**{trend.title}**",
             "",
             f"{LIST_INDENT}{trend.body.strip()}",
             "",
@@ -302,7 +302,7 @@ def _render_tech_summary(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) ->
     if tech.feasibility:
         lines.extend(["### 🔮 可行性思考", ""])
         for group in tech.feasibility:
-            lines.append(f"{group.index}. **{group.title}**")
+            lines.append(f"**{group.title}**")
             lines.append("")
             for bullet in group.bullets:
                 lines.append(f"{LIST_INDENT}- {bullet.strip()}")
@@ -367,8 +367,7 @@ def build_export_html(
         for trend in tech.trends:
             trends_html.append(
                 f'<div class="trend-item">'
-                f"<p class=\"trend-heading\"><strong>{trend.index}. "
-                f"{escape(trend.title)}</strong></p>"
+                f"<p class=\"trend-heading\"><strong>{escape(trend.title)}</strong></p>"
                 f'<p class="trend-body">{escape(trend.body)}</p>'
                 f"</div>"
             )
@@ -381,8 +380,7 @@ def build_export_html(
             )
             feasibility_html.append(
                 f'<div class="trend-item">'
-                f"<p class=\"trend-heading\"><strong>{group.index}. "
-                f"{escape(group.title)}</strong></p>"
+                f"<p class=\"trend-heading\"><strong>{escape(group.title)}</strong></p>"
                 f"<ul class=\"feasibility-list\">{bullets}</ul>"
                 f"</div>"
             )

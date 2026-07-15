@@ -10,7 +10,7 @@
 
 **核心摘要：** 近两周AI行业的主线愈发清晰：智能体正在从概念走向可用产品。OpenAI一口气推出GPT-5.6系列、ChatGPT Work与全双工GPT-Live，将Agent能力覆盖到编程、办公与语音交互；国内阶跃星辰发布首款AI原生手机STEPX Neo，高德推出交互式世界模型工坊，阿里元境上线60+模型聚合平台，展现出中国厂商在端侧、世界模型与Agent基础设施上的差异化押注。基础设施层，HuggingFace密集联手Cerebras、SkyPilot、AWS SageMaker、微软Foundry与vLLM，打通训练、部署与跨云存储链路。Anthropic则持续强化Claude的编程、物理AI与治理体系。AI正从"更强模型"迈向"更可用、更安全、更贴近场景"的新阶段。
 
-![闪联AI周刊封面](weekly-2026-07-14/images/cover.png)
+![闪联AI周刊封面](images/cover.png)
 
 ## 🚀 行业动态
 
@@ -274,33 +274,33 @@
 
 ### ☀️ 核心趋势
 
-25. **智能体成为新一代生产力入口**
+**智能体成为新一代生产力入口**
 
     从ChatGPT Work、GPT-5.6 Sol到STEPX Neo，Agent不再是Demo，而是深度接管办公、编码与手机操作。OpenAI以Codex+GPT-5.6驱动长链条任务，阶跃星辰用Step AOS重构手机交互，Claude Code则演化为旗舰级编码智能体，三条路线共同勾勒出Agent化生产力的雏形。
 
-11. **开源基础设施加速多云一体化**
+**开源基础设施加速多云一体化**
 
     HuggingFace在两周内密集打通与Cerebras、SkyPilot、SageMaker、Azure Foundry及vLLM的连接，覆盖推理加速、跨云存储、企业部署与后端建模。开源模型的分发路径正在被彻底重塑，训练、推理、部署三段式的摩擦成本明显下降。
 
-28. **世界模型与具身智能走向可用化**
+**世界模型与具身智能走向可用化**
 
     高德ABot-World Studio把交互式视频生成与3DGS场景整合，可在单张5090上本地部署；LeRobot v0.6.0加入"想象-评估-改进"闭环；UST将Claude引入物理AI。世界模型与机器人学习正从研究话题快速走向工程落地。
 
 ### 🔮 可行性思考
 
-24. **企业级智能体应用开发**
+**企业级智能体应用开发**
 
     - **模型选型：** GPT-5.6 Sol适合复杂推理与编程Agent，Terra/Luna兼顾成本
     - **执行沙箱：** 结合腾讯云CubeSandbox提供并发隔离的安全运行环境
     - **多模型接入：** 通过阿里JellyToken一个API Key聚合60+国产模型，降低切换成本
 
-26. **实时语音与多模态交互**
+**实时语音与多模态交互**
 
     - **低延迟推理：** Gemma 4部署在Cerebras晶圆级芯片，适合语音助手
     - **全双工体验：** GPT-Live支持随时打断、同声传译与可视化卡片
     - **落地场景：** 客服、同传、车载语音助手是首批高价值应用方向
 
-20. **隐私优先的本地AI应用**
+**隐私优先的本地AI应用**
 
     - **会议记录：** Meetily基于Rust+Whisper+Ollama实现全本地转写摘要
     - **桌面自动化：** DesktopCommanderMCP让Claude具备本地终端与文件操作能力

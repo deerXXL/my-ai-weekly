@@ -14,17 +14,28 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.application import MIMEApplication
 import sys
+from dotenv import load_dotenv
 
 from bs4 import BeautifulSoup
 
 # ─── 配置 ────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent
 os.chdir(BASE_DIR)
+load_dotenv()  # 读取项目根目录 .env 中的环境变量（如 QQ_MAIL_PASSWORD、WEEKLY_SITE_URL）
 OUTPUT_DIR = BASE_DIR / "output"
 
 SENDER = "3540737632@qq.com"
-RECEIVER = "3664250038@qq.com"
 SUBJECT = "闪联AI周刊"
+
+# 收件人：在 .env 中用 QQ_MAIL_RECEIVERS 配置，多个邮箱用英文逗号分隔
+#   例：QQ_MAIL_RECEIVERS=aaa@qq.com,bbb@163.com
+RECEIVER_RAW = os.getenv("QQ_MAIL_RECEIVERS", "lijq@igrslab.com")
+RECEIVERS = [r.strip() for r in RECEIVER_RAW.split(",") if r.strip()]
+if not RECEIVERS:
+    raise SystemExit(
+        "[ERROR] 未配置收件人。请在项目根目录 .env 中添加一行：\n"
+        "        QQ_MAIL_RECEIVERS=邮箱1,邮箱2"
+    )
 
 # QQ 邮箱授权码：在 .env 中配置 QQ_MAIL_PASSWORD（.env 已被 .gitignore 忽略，不会提交）
 PASSWORD = os.getenv("QQ_MAIL_PASSWORD", "")
@@ -127,7 +138,7 @@ def main():
     msg = MIMEMultipart("mixed")
     msg["Subject"] = SUBJECT
     msg["From"] = SENDER
-    msg["To"] = RECEIVER
+    msg["To"] = ", ".join(RECEIVERS)
     msg["Content-Transfer-Encoding"] = "8bit"
 
     # 相关部分：HTML 正文 + 内嵌图片
@@ -153,12 +164,12 @@ def main():
     else:
         print(f"[WARN] 未找到 md 文件，跳过附件: {md_path}")
 
-    # 通过 QQ 邮箱 SMTP 发送
+    # 通过 QQ 邮箱 SMTP 群发给所有收件人
     with smtplib.SMTP_SSL("smtp.qq.com", 465) as server:
         server.login(SENDER, PASSWORD)
-        server.sendmail(SENDER, RECEIVER, msg.as_string())
+        server.sendmail(SENDER, RECEIVERS, msg.as_string())
 
-    print(f"[INFO] 邮件已发送至 {RECEIVER}")
+    print(f"[INFO] 邮件已发送至 {len(RECEIVERS)} 个收件人: {', '.join(RECEIVERS)}")
 
 
 if __name__ == "__main__":
