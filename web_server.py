@@ -26,13 +26,8 @@ from app.services.export_builder import (
 
 app = Flask(__name__)
 
-_load_tasks()
-
-
 TASKS = {}
-
 TASK_LOCK = threading.Lock()
-
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
@@ -70,6 +65,9 @@ def _save_tasks():
         tmp.replace(TASKS_FILE)
     except Exception as exc:
         print("保存任务状态失败：", exc)
+
+
+_load_tasks()
 
 
 def _new_task(name: str) -> str:
