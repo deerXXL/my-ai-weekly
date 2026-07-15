@@ -30,6 +30,8 @@ SUBJECT = "闪联AI周刊"
 
 # 收件人：在 .env 中用 QQ_MAIL_RECEIVERS 配置，多个邮箱用英文逗号分隔
 #   例：QQ_MAIL_RECEIVERS=aaa@qq.com,bbb@163.com
+#   发送模式为「轮流单发」：每期只发给列表里的下一个邮箱（A→B→C→A 循环），
+#   进度记录在 scripts/.last_receiver。
 RECEIVER_RAW = os.getenv("QQ_MAIL_RECEIVERS", "lijq@igrslab.com")
 RECEIVERS = [r.strip() for r in RECEIVER_RAW.split(",") if r.strip()]
 if not RECEIVERS:
@@ -37,6 +39,23 @@ if not RECEIVERS:
         "[ERROR] 未配置收件人。请在项目根目录 .env 中添加一行：\n"
         "        QQ_MAIL_RECEIVERS=邮箱1,邮箱2"
     )
+
+# 轮流单发指针：记录上一期发给哪个邮箱，下一期自动发给列表里的下一个（循环）。
+# 用 scripts/.last_receiver 持久化，重启 / 重跑都不会丢失进度。
+RECEIVER_STATE = BASE_DIR / "scripts" / ".last_receiver"
+
+
+def _next_receiver() -> str:
+    """按 QQ_MAIL_RECEIVERS 列表轮流选择下一个收件人。
+
+    读取上次发送的邮箱，取列表中的下一个（循环）；首次运行则取第一个。
+    """
+    last = RECEIVER_STATE.read_text(encoding="utf-8").strip() if RECEIVER_STATE.exists() else ""
+    try:
+        idx = RECEIVERS.index(last)
+    except ValueError:
+        idx = -1
+    return RECEIVERS[(idx + 1) % len(RECEIVERS)]
 
 # QQ 邮箱授权码：在 .env 中配置 QQ_MAIL_PASSWORD（.env 已被 .gitignore 忽略，不会提交）
 PASSWORD = os.getenv("QQ_MAIL_PASSWORD", "")
@@ -139,7 +158,9 @@ def main():
     msg = MIMEMultipart("mixed")
     msg["Subject"] = SUBJECT
     msg["From"] = SENDER
-    msg["To"] = ", ".join(RECEIVERS)
+    # 轮流单发：每期只发给列表里的下一个邮箱
+    chosen = _next_receiver()
+    msg["To"] = chosen
     msg["Content-Transfer-Encoding"] = "8bit"
 
     # 相关部分：HTML 正文 + 内嵌图片
@@ -181,12 +202,14 @@ def main():
     else:
         print(f"[WARN] 未找到 md 数据，跳过附件")
 
-    # 通过 QQ 邮箱 SMTP 群发给所有收件人
+    # 通过 QQ 邮箱 SMTP 发送给本期轮到的单个收件人
     with smtplib.SMTP_SSL("smtp.qq.com", 465) as server:
         server.login(SENDER, PASSWORD)
-        server.sendmail(SENDER, RECEIVERS, msg.as_string())
+        server.sendmail(SENDER, [chosen], msg.as_string())
 
-    print(f"[INFO] 邮件已发送至 {len(RECEIVERS)} 个收件人: {', '.join(RECEIVERS)}")
+    # 记录本期发给谁，下一期自动轮到下一个
+    RECEIVER_STATE.write_text(chosen, encoding="utf-8")
+    print(f"[INFO] 邮件已发送（轮流单发）至: {chosen}")
 
 
 if __name__ == "__main__":

@@ -32,3 +32,9 @@ Thumbs.db
 .mypy_cache/
 .coverage
 htmlcov/
+
+# 运行时状态（邮件去重指针 / 轮流单发指针，勿提交）
+scripts/.last_sent_issue
+scripts/.last_receiver
+weekly_email.log
+run.log
