@@ -1,0 +1,18 @@
+[Unit]
+Description=闪联AI周刊 Web 服务
+After=network.target
+
+[Service]
+Type=simple
+# 改成你的部署用户与项目路径
+User=www-data
+WorkingDirectory=/opt/ai-weekly
+Environment=PYTHONUNBUFFERED=1
+# 把密钥注入进程（推荐用 .env 方式，或在此逐条 Environment=）
+EnvironmentFile=/opt/ai-weekly/.env
+ExecStart=/opt/ai-weekly/venv/bin/gunicorn -w 2 -b 127.0.0.1:5000 web_server:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

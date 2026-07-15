@@ -14,6 +14,7 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.application import MIMEApplication
 import sys
+import json
 from dotenv import load_dotenv
 
 from bs4 import BeautifulSoup
@@ -155,14 +156,30 @@ def main():
         related.attach(img_part)
     msg.attach(related)
 
-    # md 文件作为附件
-    if md_path.exists():
-        md_part = MIMEApplication(md_path.read_bytes())
+    # md 文件作为附件：优先用当前（已修复的）代码实时生成，保证不再出现混乱序号；
+    # 仅在缺少 newsletter.json 时才退回磁盘上的 newsletter.md
+    json_path = weekly_dir / "newsletter.json"
+    md_bytes = None
+    if json_path.exists():
+        try:
+            from app.services.export_builder import build_export_markdown
+            report = json.loads(json_path.read_text(encoding="utf-8"))
+            md_bytes = build_export_markdown(report).encode("utf-8")
+            print(f"[INFO] md 由当前代码实时生成（无序号）")
+        except Exception as exc:
+            print(f"[WARN] md 实时生成失败，退回磁盘文件: {exc}")
+            md_bytes = md_path.read_bytes() if md_path.exists() else None
+    elif md_path.exists():
+        md_bytes = md_path.read_bytes()
+        print(f"[INFO] 未找到 newsletter.json，使用磁盘 md 文件")
+
+    if md_bytes:
+        md_part = MIMEApplication(md_bytes)
         md_part.add_header("Content-Disposition", "attachment", filename="newsletter.md")
         msg.attach(md_part)
-        print(f"[INFO] 已附上 md 文件: {md_path.name}")
+        print(f"[INFO] 已附上 md 文件: newsletter.md")
     else:
-        print(f"[WARN] 未找到 md 文件，跳过附件: {md_path}")
+        print(f"[WARN] 未找到 md 数据，跳过附件")
 
     # 通过 QQ 邮箱 SMTP 群发给所有收件人
     with smtplib.SMTP_SSL("smtp.qq.com", 465) as server:
