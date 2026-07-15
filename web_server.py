@@ -354,7 +354,11 @@ def api_archive():
                 except ValueError:
                     pass
 
-            issue_number = data.get("issue_number") or (total - idx + 1)
+            # 优先读取文件里保存的期号；若未设置（为 0 或空），
+            # 则按日期升序编号：最旧的 = 第1期，最新的 = 最后一期。
+            issue_number = data.get("issue_number")
+            if not issue_number:
+                issue_number = idx
 
             title = data.get("title", "")
             if not title or title == "AI Daily Report":

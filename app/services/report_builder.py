@@ -1,6 +1,4 @@
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 
 from app.models.daily_report import (
     IndustryNewsItem,
@@ -8,27 +6,23 @@ from app.models.daily_report import (
     WeeklyNewsletter,
 )
 
-
-BASE_DIR = Path(__file__).resolve().parents[2]
-OUTPUT_DIR = BASE_DIR / "output"
+from config import issue_period, OUTPUT_DIR
 
 
 def _calc_issue_number() -> int:
-    """统计已有报告数，返回下一期号"""
+    """统计已有周刊目录/文件数，返回下一期号（从 1 开始）。"""
     count = 0
     if OUTPUT_DIR.exists():
-        for f in OUTPUT_DIR.glob("weekly-*.json"):
-            if f.name != "latest.json":
+        count += sum(1 for p in OUTPUT_DIR.glob("weekly-*/newsletter.json") if p.is_file())
+        for p in OUTPUT_DIR.glob("weekly-*.json"):
+            if p.name != "latest.json" and p.is_file():
                 count += 1
     return count + 1
 
 
 def _calc_period(days: int = 14):
-    """计算双周统计区间"""
-    now = datetime.now()
-    period_end = now.strftime("%Y-%m-%d")
-    period_start = (now - timedelta(days=days)).strftime("%Y-%m-%d")
-    return period_start, period_end
+    """计算双周统计区间（与 pipeline 一致：近 N 天滚动窗口）。"""
+    return issue_period(days)
 
 
 def build_report(items, signals, days=14):
