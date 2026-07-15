@@ -1,6 +1,6 @@
 ﻿import argparse
 from app.pipeline import run_pipeline
-from app.services.file_writer import write_json, write_markdown
+from app.services.file_writer import write_json, write_markdown, write_html
 
 
 def main():
@@ -22,6 +22,7 @@ def main():
 
     print(f"Starting AI weekly report generation... (days={args.days}, mode={args.mode})")
     report = run_pipeline()
+    write_html(report)
     write_markdown(report)
     write_json(report)
     print("Weekly report generated.")
