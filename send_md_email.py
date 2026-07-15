@@ -12,20 +12,44 @@ from pathlib import Path
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
+import sys
 
 from bs4 import BeautifulSoup
 
 # ─── 配置 ────────────────────────────────────────────────────────────
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent
+os.chdir(BASE_DIR)
+OUTPUT_DIR = BASE_DIR / "output"
 
 SENDER = "3540737632@qq.com"
-PASSWORD = "gsdpvpretuedchcf"
 RECEIVER = "3664250038@qq.com"
 SUBJECT = "闪联AI周刊"
 
-# HTML 文件路径
-HTML_FILE = "output/weekly-2026-07-13/newsletter.html"
-IMAGES_DIR = Path("output/weekly-2026-07-13/images")
+# QQ 邮箱授权码：在 .env 中配置 QQ_MAIL_PASSWORD（.env 已被 .gitignore 忽略，不会提交）
+PASSWORD = os.getenv("QQ_MAIL_PASSWORD", "")
+if not PASSWORD:
+    raise SystemExit(
+        "[ERROR] 未配置 QQ 邮箱授权码。请在项目根目录 .env 中添加一行：\n"
+        "        QQ_MAIL_PASSWORD=你的QQ邮箱授权码"
+    )
+
+# 周报网页地址（收信人可点开在线查看完整页面）
+SITE_URL = os.getenv("WEEKLY_SITE_URL", "https://ai-weekly-report.onrender.com/")
+
+# 周刊目录：默认发送最新一期；可在命令行指定日期：
+#   python send_md_email.py              # 发送最新的 output/weekly-*
+#   python send_md_email.py 2026-07-15   # 发送指定日期那一期
+def _resolve_weekly_dir(date_str=None) -> Path:
+    if date_str:
+        d = OUTPUT_DIR / f"weekly-{date_str}"
+        if not d.is_dir():
+            raise SystemExit(f"[ERROR] 指定目录不存在: {d}")
+        return d
+    dirs = sorted([p for p in OUTPUT_DIR.glob("weekly-*") if p.is_dir()])
+    if not dirs:
+        raise SystemExit("[ERROR] 未找到任何 output/weekly-* 目录，请先生成周报")
+    return dirs[-1]
 
 
 # ─── 工具函数 ──────────────────────────────────────────────────────────
@@ -40,7 +64,7 @@ def _src_to_filename(src: str) -> str:
     return Path(src).name
 
 
-def prepare_html_and_images(html: str) -> tuple[str, list[tuple[str, Path]]]:
+def prepare_html_and_images(html: str, images_dir: Path) -> tuple[str, list[tuple[str, Path]]]:
     """解析 HTML，收集需要嵌入的图片，并将 src 替换为 CID 引用。
 
     返回:
@@ -56,7 +80,7 @@ def prepare_html_and_images(html: str) -> tuple[str, list[tuple[str, Path]]]:
             continue
 
         filename = _src_to_filename(src)
-        full_path = IMAGES_DIR / filename
+        full_path = images_dir / filename
         if not full_path.exists():
             print(f"[WARN] 图片不存在，跳过: {full_path}")
             continue
@@ -71,8 +95,15 @@ def prepare_html_and_images(html: str) -> tuple[str, list[tuple[str, Path]]]:
 
 # ─── 主流程 ────────────────────────────────────────────────────────────
 def main():
+    date_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    weekly_dir = _resolve_weekly_dir(date_arg)
+    print(f"[INFO] 发送周刊目录: {weekly_dir}")
+
+    html_path = weekly_dir / "newsletter.html"
+    images_dir = weekly_dir / "images"
+    md_path = weekly_dir / "newsletter.md"
+
     # 读取 HTML
-    html_path = Path(HTML_FILE)
     if not html_path.exists():
         print(f"[ERROR] HTML 文件不存在: {html_path}")
         return
@@ -80,21 +111,29 @@ def main():
     html_content = html_path.read_text(encoding="utf-8")
 
     # 替换图片 src 为 CID 引用，收集图片列表
-    html_content, image_list = prepare_html_and_images(html_content)
+    html_content, image_list = prepare_html_and_images(html_content, images_dir)
     print(f"[INFO] 共 {len(image_list)} 张图片需要内嵌")
 
-    # 构建 MIME 邮件
-    msg = MIMEMultipart("related")
+    # 在邮件正文末尾追加“在线查看”链接，让收信人能打开网页完整页面
+    footer = (
+        '<hr style="margin-top:24px;border:none;border-top:1px solid #eee">'
+        f'<p style="color:#666;font-size:13px">'
+        f'📄 <a href="{SITE_URL}" style="color:#2b6cb0">'
+        f'在网页查看完整周报（含交互与最新内容）</a></p>'
+    )
+    html_content = html_content + footer
+
+    # 构建 MIME 邮件（mixed 外层：HTML 正文 + 内嵌图 + md 附件）
+    msg = MIMEMultipart("mixed")
     msg["Subject"] = SUBJECT
     msg["From"] = SENDER
     msg["To"] = RECEIVER
     msg["Content-Transfer-Encoding"] = "8bit"
 
-    # HTML 正文
+    # 相关部分：HTML 正文 + 内嵌图片
+    related = MIMEMultipart("related")
     html_part = MIMEText(html_content, "html", "utf-8")
-    msg.attach(html_part)
-
-    # 内嵌图片（CID 附件）
+    related.attach(html_part)
     for cid, img_path in image_list:
         mime = _mime_type_for(str(img_path))
         with open(img_path, "rb") as f:
@@ -102,7 +141,17 @@ def main():
         img_part = MIMEImage(img_data, _subtype=mime.split("/")[1])
         img_part.add_header("Content-ID", f"<{cid}>")
         img_part.add_header("Content-Disposition", "inline", filename=img_path.name)
-        msg.attach(img_part)
+        related.attach(img_part)
+    msg.attach(related)
+
+    # md 文件作为附件
+    if md_path.exists():
+        md_part = MIMEApplication(md_path.read_bytes())
+        md_part.add_header("Content-Disposition", "attachment", filename="newsletter.md")
+        msg.attach(md_part)
+        print(f"[INFO] 已附上 md 文件: {md_path.name}")
+    else:
+        print(f"[WARN] 未找到 md 文件，跳过附件: {md_path}")
 
     # 通过 QQ 邮箱 SMTP 发送
     with smtplib.SMTP_SSL("smtp.qq.com", 465) as server:
