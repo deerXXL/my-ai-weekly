@@ -55,12 +55,11 @@ Windows 若 emoji 乱码：`$env:PYTHONIOENCODING='utf-8'`
 
 导出最新一期（浏览器或 curl）：
 
-```powershell
-# Markdown
-curl -OJ "http://127.0.0.1:5000/api/export?format=md"
+`/api/export` 返回**自包含 ZIP**（内含 `newsletter.md` + `newsletter.html` + `images/`，解压即可离线查看图文）。`format` 参数已废弃，始终返回 ZIP。
 
-# HTML
-curl -OJ "http://127.0.0.1:5000/api/export?format=html"
+```powershell
+# 下载自包含 ZIP（含 md、html 与全部配图）
+curl -OJ "http://127.0.0.1:5000/api/export"
 ```
 
 ## 资讯来源

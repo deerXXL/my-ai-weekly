@@ -150,7 +150,12 @@ def _render_overview(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> lis
         "",
     ])
     if ov.cover_image:
-        lines.extend([f"![{newsletter.brand_name}封面]({ov.cover_image})", ""])
+        # 去掉可能带上的期号目录前缀，统一为 images/cover.png，
+        # 这样在 issue 目录内/导出 ZIP 内都能用相对路径解析到图片
+        cover = ov.cover_image
+        if cover.startswith("weekly-"):
+            cover = "/".join(cover.split("/")[1:])
+        lines.extend([f"![{newsletter.brand_name}封面]({cover})", ""])
     return lines
 
 
@@ -222,15 +227,29 @@ def _dict_to_newsletter(report: dict) -> WeeklyNewsletter:
     )
 
 
-def _image_src_for_html(image_url: str, issue_slug: str) -> str:
-    """本地图片用 /issues/{issue_slug}/images/... 供 Flask 静态路由。"""
+def _image_src_for_html(
+    image_url: str,
+    issue_slug: str,
+    relative: bool = False,
+) -> str:
+    """本地图片地址。
+
+    - relative=False（网页/服务器预览）：用 /issues/{issue_slug}/images/... 供 Flask 静态路由
+    - relative=True（导出 ZIP 内离线查看）：统一为相对路径 images/...，脱离服务器也能显示
+    """
     if not image_url:
         return ""
     if image_url.startswith("http://") or image_url.startswith("https://"):
         return image_url
-    if image_url.startswith("images/"):
-        return f"/issues/{issue_slug}/{image_url}"
-    return "/" + image_url.lstrip("/")
+    # 统一成 images/xxx：去掉开头斜杠与可能带上的期号目录前缀
+    rel = image_url.lstrip("/")
+    if rel.startswith("weekly-"):
+        rel = "/".join(rel.split("/")[1:])
+    if relative:
+        return rel
+    if rel.startswith("images/"):
+        return f"/issues/{issue_slug}/{rel}"
+    return "/" + rel
 
 
 def _group_industry_by_date(newsletter: WeeklyNewsletter) -> OrderedDict[str, list]:
@@ -306,7 +325,10 @@ def _format_bullet_html(text: str) -> str:
     return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
 
 
-def build_export_html(report: dict | WeeklyNewsletter | None = None) -> str:
+def build_export_html(
+    report: dict | WeeklyNewsletter | None = None,
+    relative: bool = False,
+) -> str:
     newsletter = _resolve_newsletter(report)
     cfg = load_newsletter_config()
     ov = newsletter.overview
@@ -319,7 +341,7 @@ def build_export_html(report: dict | WeeklyNewsletter | None = None) -> str:
         for item in items:
             img_html = ""
             if item.image_url:
-                src = _image_src_for_html(item.image_url, issue_slug)
+                src = _image_src_for_html(item.image_url, issue_slug, relative)
                 img_html = (
                     f'<img class="news-image" src="{escape(src)}" '
                     f'alt="{escape(item.title)}" loading="lazy">'
@@ -379,7 +401,7 @@ def build_export_html(report: dict | WeeklyNewsletter | None = None) -> str:
 
     cover_html = ""
     if ov.cover_image:
-        src = _image_src_for_html(ov.cover_image, issue_slug)
+        src = _image_src_for_html(ov.cover_image, issue_slug, relative)
         cover_html = (
             f'<img class="cover-image" src="{escape(src)}" '
             f'alt="{escape(newsletter.brand_name)}封面">'

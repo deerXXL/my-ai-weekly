@@ -71,9 +71,10 @@ def _sort_items_by_date(items):
     )
 
 
-def _analyze_parallel(items, limit: int) -> list[dict]:
+def _analyze_parallel(items, limit: int) -> tuple[list[dict], str | None]:
     targets = items[:limit]
     slots: list[dict | None] = [None] * len(targets)
+    errors: list[str] = []
     with ThreadPoolExecutor(max_workers=MAX_LLM_WORKERS) as executor:
         future_map = {
             executor.submit(analyze_item, item): idx
@@ -85,7 +86,8 @@ def _analyze_parallel(items, limit: int) -> list[dict]:
                 slots[idx] = future.result()
             except Exception as exc:
                 print(f"  分析失败: {targets[idx].title[:30]} — {exc}")
-    return [s for s in slots if s is not None]
+                errors.append(str(exc))
+    return [s for s in slots if s is not None], (errors[0] if errors else None)
 
 
 def _resolve_one_image(args: tuple) -> tuple[int, str]:
@@ -204,10 +206,17 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
     print(f"分析前 {min(analyze_limit, len(items))} 条（{MAX_LLM_WORKERS} 并发）\n")
 
     with timer.stage("LLM逐条分析"):
-        candidates = _analyze_parallel(items, analyze_limit)
+        candidates, first_err = _analyze_parallel(items, analyze_limit)
 
     if not candidates:
-        raise RuntimeError("没有成功分析的资讯条目")
+        reason = first_err or "全部条目在 LLM 分析阶段均抛出异常"
+        hint = (
+            "（请检查：①ARK_API_KEY 是否正确且未过期；"
+            "②ARK_BASE_URL 是否可达；"
+            "③运行环境是否有外网/代理(HTTP_PROXY)访问火山方舟；"
+            "④是否触发速率限制 429。错误信息见上）"
+        )
+        raise RuntimeError(f"没有成功分析的资讯条目：{reason} {hint}")
     print(f"\n分析完成 {len(candidates)} 条\n")
 
     with timer.stage("LLM策展合成"):

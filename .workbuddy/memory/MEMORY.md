@@ -13,6 +13,14 @@
 - 入口：`web_app.py`（`use_reloader=False`）；`web_server.py` 内 `app.run(debug=True)`。
 - 依赖隔离：在 managed venv（`python -m venv .../envs/default`）装 `python-dotenv`、`flask` 后可直接跑。
 
+## 运行环境要求（部署网页服务时极易踩坑）
+- `/api/collect`（新增本期资讯）会跑完整流水线，必须能访问火山方舟端点
+  `https://ark.cn-beijing.volces.com`，且环境变量 `ARK_API_KEY` / `ARK_BASE_URL` / `ARK_MODEL`
+  与本地 `.env` 一致（本地用 `api/coding/v3` + `ark-code-latest`）。
+  若部署到 CloudStudio/沙箱等无外网或未注入 Secret 的环境，LLM 分析会全挂 → 报
+  "没有成功分析的资讯条目"。`pipeline.py` 现已把真实异常原因带进该报错，便于定位。
+- 导出（`/api/export`）返回自包含 ZIP（md+html+images），解压即可看图。
+
 ## 邮件发送（send_md_email.py）
 - 附件路径格式：`output/weekly-YYYY-MM-DD/newsletter.md`（不是 `output/weekly-YYYY-MM-DD.md`）。
 - QQ邮箱 SMTP 需要 `port=465, smtp_ssl=True`。

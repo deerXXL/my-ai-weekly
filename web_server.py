@@ -1,8 +1,10 @@
 """闪联AI周刊 Web 服务：HTML 预览、导出、静态资源。"""
+import io
 import threading
 import time
 import traceback
 import uuid
+import zipfile
 from datetime import datetime
 from pathlib import Path
 from app.services.report_reader import to_frontend_articles
@@ -400,33 +402,35 @@ def api_export():
                 "message": "暂无可导出的周报数据，请先生成",
             }), 400
 
-        fmt = request.args.get("format", "md").lower()
         date = (report.get("generated_at") or "unknown")[:10]
 
-        if fmt == "html":
-            content = build_export_html(report)
-            return Response(
-                content,
-                mimetype="text/html; charset=utf-8",
-                headers={
-                    "Content-Disposition": (
-                        f'attachment; filename="weekly-{date}.html"; '
-                        f"filename*=UTF-8''weekly-{date}.html"
-                    ),
-                },
-            )
+        md = build_export_markdown(report)
+        # 导出 HTML 使用相对路径，脱离服务器也能显示图片
+        html = build_export_html(report, relative=True)
 
-        content = build_export_markdown(report)
+        # 组装自包含 ZIP：newsletter.md + newsletter.html + images/
+        # 解压后 md/html 与 images/ 同级，图片即可正常显示
+        issue_dir = OUTPUT_DIR / f"weekly-{date}"
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("newsletter.md", md)
+            zf.writestr("newsletter.html", html)
+            images_dir = issue_dir / "images"
+            if images_dir.is_dir():
+                for p in sorted(images_dir.iterdir()):
+                    if p.is_file():
+                        zf.write(p, f"images/{p.name}")
+        buf.seek(0)
+
         return Response(
-            content,
-            mimetype="text/markdown; charset=utf-8",
+            buf.getvalue(),
+            mimetype="application/zip",
             headers={
                 "Content-Disposition": (
-                    f'attachment; filename="weekly-{date}.md"; '
-                    f"filename*=UTF-8''weekly-{date}.md"
+                    f'attachment; filename="weekly-{date}.zip"; '
+                    f"filename*=UTF-8''weekly-{date}.zip"
                 ),
                 "X-Export-Date": date,
-                "X-Export-Size": str(len(content.encode("utf-8"))),
             },
         )
     except Exception as exc:
