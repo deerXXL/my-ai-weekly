@@ -6,9 +6,10 @@ permissions:
 
 on:
   schedule:
-    # 每天北京时间上午9点
-    # GitHub Actions 使用 UTC，所以是 1 点
-    - cron: "0 1 * * *"
+    # 每两周的周一北京时间上午9点触发一次（与邮件定时同步）
+    # GitHub Actions 使用 UTC，周一 1 点 = 北京时间周一 9 点
+    # 配合下方「Check bi-weekly schedule」步骤：仅在偶数 ISO 周真正生成，奇数周跳过
+    - cron: "0 1 * * 1"
 
   workflow_dispatch:
 
@@ -36,18 +37,34 @@ jobs:
         uses: actions/checkout@v4
 
 
+      - name: Check bi-weekly schedule
+        id: schedule
+        run: |
+          WEEK=$(date -u +%V)
+          if [ $((10#$WEEK % 2)) -eq 0 ]; then
+            echo "Generation week (ISO week $WEEK, even) — proceeding."
+            echo "run_gen=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skip week (ISO week $WEEK, odd) — no generation this week."
+            echo "run_gen=false" >> "$GITHUB_OUTPUT"
+          fi
+
+
       - name: Setup Python
+        if: steps.schedule.outputs.run_gen == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
 
       - name: Install dependencies
+        if: steps.schedule.outputs.run_gen == 'true'
         run: |
           pip install -r requirements.txt
 
 
       - name: Verify API config
+        if: steps.schedule.outputs.run_gen == 'true'
         run: |
           echo "::group::🔑 API 配置诊断（key 已脱敏）"
           if [ -z "$ARK_API_KEY" ]; then
@@ -68,10 +85,12 @@ jobs:
           echo "::endgroup::"
 
       - name: Generate Weekly
+        if: steps.schedule.outputs.run_gen == 'true'
         run: |
           python generate_weekly.py --days 14
 
       - name: Commit generated files
+        if: steps.schedule.outputs.run_gen == 'true'
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
