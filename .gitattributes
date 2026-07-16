@@ -1,0 +1,7 @@
+# 强制项目记忆文件使用 LF 换行符，避免 Windows 上 core.autocrlf 触发 CRLF 转换警告
+.workbuddy/memory/** text eol=lf
+# 本文件自身也使用 LF
+.gitattributes text eol=lf
+# 源码统一 LF：weekly_send.sh / retention.py 在远端 Linux 运行，LF 更友好，并消除 CRLF 警告
+*.py text eol=lf
+*.sh text eol=lf

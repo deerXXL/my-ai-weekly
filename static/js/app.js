@@ -331,6 +331,12 @@ async function loadMeta() {
     } else if (periodEl && meta.date) {
       periodEl.textContent = meta.date;
     }
+
+    // 展示期刊保留策略提示
+    const retainEl = document.getElementById("retainHint");
+    if (retainEl && meta.retain_issues) {
+      retainEl.textContent = `系统自动保留最近 ${meta.retain_issues} 期（不重复周期）`;
+    }
   } catch (e) {
     console.warn("无法加载页面元信息:", e);
   }
@@ -446,8 +452,8 @@ async function runCollect(btn) {
     const res = await fetch("/api/collect", { method: "POST" });
     const data = await res.json();
 
-    // 同一天已采集过：直接提示，不跑流水线
-    if (data.status === "already_updated") {
+    // 同一天已采集过 / 正在采集中：直接提示，不跑流水线、不报错
+    if (data.status === "already_updated" || data.status === "running") {
       hideStatus();
       alert(`ℹ️ ${data.message}`);
       return;

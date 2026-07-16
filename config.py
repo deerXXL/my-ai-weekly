@@ -48,6 +48,10 @@ BASE_DIR = Path(__file__).resolve().parents[0]
 OUTPUT_DIR = BASE_DIR / "output"
 NEWSLETTER_CONFIG_PATH = BASE_DIR / "config" / "newsletter.json"
 
+# 期刊保留策略：仅保留最近 N 个「不重复周期」的期（更旧的在每次采集后自动清理）
+# 可通过环境变量 AI_WEEKLY_RETAIN_ISSUES 覆盖，默认 5 期
+REPORT_RETAIN_ISSUES = int(_getenv("AI_WEEKLY_RETAIN_ISSUES", "5"))
+
 ARK_API_KEY = _getenv("ARK_API_KEY")
 ARK_BASE_URL = _getenv(
     "ARK_BASE_URL",
@@ -137,16 +141,37 @@ def format_date_label(value: datetime) -> str:
     return f"{value.month}月{value.day}·{WEEKDAY_CN[value.weekday()]}"
 
 
+# 双周周期锚点：用户指定下周一（2026-07-20，必须为周一）起为第 0 个双周块。
+# 此后以 period_days（默认 14，须为 7 的倍数）天为一个块，块起点恒为周一、
+# 块长 period_days 天（周一~周日），相邻块首尾相接、无重叠。
+# 这样无论何时触发生成，落点都对齐到对应的双周块内，保证
+# 「每期周期边界对齐周一 + 保持两周的周期距离」。可用 AI_WEEKLY_PERIOD_ANCHOR 覆盖。
+_PERIOD_ANCHOR_STR = _getenv("AI_WEEKLY_PERIOD_ANCHOR", "2026-07-20")
+try:
+    PERIOD_ANCHOR = datetime.strptime(_PERIOD_ANCHOR_STR, "%Y-%m-%d")
+except (ValueError, TypeError):
+    PERIOD_ANCHOR = datetime(2026, 7, 20)
+
+
 def issue_period(
     period_days: int = 14,
     today: datetime | None = None,
 ) -> tuple[str, str]:
-    """返回本期时间范围（滚动窗口，起止始终正确）。"""
+    """返回本期时间范围（双周块，起点恒为周一）。
+
+    以 ``PERIOD_ANCHOR``（一个周一）为基准，把时间轴切成若干 period_days 天长的块；
+    第 k 个块 = [锚点 + k*period_days, 锚点 + k*period_days + period_days-1]。
+    给定 ``today``，取包含它的那个块作为本期周期，因此：
+    - 块起点恒为周一（锚点是周一、period_days 为 7 的倍数）；
+    - 相邻块严格相隔 period_days 天（两周距离），不重叠、不遗漏；
+    - 任意触发日都落在对应块内，周期边界稳定可复现。
+    """
     now = today or datetime.now()
-    start = now - timedelta(days=max(period_days - 1, 0))
-    if start > now:
-        start = now
-    return format_chinese_date(start), format_chinese_date(now)
+    total_days = (now - PERIOD_ANCHOR).days
+    slot = total_days // period_days  # 每 period_days 天一个块（负天数向下取整，仍对齐）
+    start = PERIOD_ANCHOR + timedelta(days=slot * period_days)
+    end = start + timedelta(days=period_days - 1)
+    return format_chinese_date(start), format_chinese_date(end)
 
 
 # 兼容旧调用

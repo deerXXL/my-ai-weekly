@@ -23,11 +23,17 @@ from app.services.export_builder import (
     build_export_markdown,
     load_latest_report_dict,
 )
+from config import REPORT_RETAIN_ISSUES
+from app.services.retention import cleanup_old_issues
 
 app = Flask(__name__)
 
 TASKS = {}
 TASK_LOCK = threading.Lock()
+
+# 采集并发锁：记录「正在采集中（尚未写盘）」的日期，防止同一天被重复触发双跑
+COLLECT_LOCK = threading.Lock()
+ACTIVE_COLLECT_DATES = set()
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
@@ -96,12 +102,18 @@ def _update_task(tid: str, **kwargs):
     _save_tasks()
 
 
-def _run_collect(tid: str):
+def _run_collect(tid: str, target_date: str):
     try:
         _update_task(tid, progress=5, message="正在加载数据源…")
         from app.pipeline import run_pipeline
         report = run_pipeline()
         n = len(report.industry_news or [])
+        # 采集完成后按保留策略清理更旧的期刊（保留最近 N 个不重复日期）
+        try:
+            clean = cleanup_old_issues()
+            print("[retention] 旧刊清理结果：", clean)
+        except Exception as exc:
+            print("[retention] 旧刊清理失败（不影响本期产出）：", exc)
         _update_task(
             tid,
             status="success",
@@ -116,6 +128,35 @@ def _run_collect(tid: str):
             message=f"采集失败：{exc}",
             error=traceback.format_exc(),
         )
+    finally:
+        # 无论成功/失败，都释放当天的采集锁
+        with COLLECT_LOCK:
+            ACTIVE_COLLECT_DATES.discard(target_date)
+
+
+def _collect_running_for(today: str) -> bool:
+    """判断今天是否已有采集任务在运行中（内存标记 或 磁盘任务记录）。
+
+    流水线运行约 5–10 分钟，期间今天的 newsletter.json 尚未写盘，
+    仅靠「文件是否存在」无法拦截重复点击，因此用此函数再兜底一次。
+    """
+    with COLLECT_LOCK:
+        if today in ACTIVE_COLLECT_DATES:
+            return True
+    # 跨进程重启兜底：检查磁盘 tasks.json 中今天仍在 running 的 collect 任务
+    with TASK_LOCK:
+        for t in TASKS.values():
+            if (
+                t.get("name") == "collect"
+                and t.get("status") == "running"
+                and t.get("started_at")
+            ):
+                try:
+                    if datetime.fromtimestamp(t["started_at"]).strftime("%Y-%m-%d") == today:
+                        return True
+                except Exception:
+                    pass
+    return False
 
 
 def _run_summarize(tid: str):
@@ -300,6 +341,8 @@ def api_meta():
 
         "cover_image": cover_image,
 
+        "retain_issues": REPORT_RETAIN_ISSUES,
+
         "overview": overview
     })
 
@@ -400,8 +443,19 @@ def api_collect():
             "date": today,
         })
 
+    # 并发锁：若今天正在采集中（尚未写盘），直接拒绝重复触发，避免双跑/互相覆盖
+    if _collect_running_for(today):
+        return jsonify({
+            "status": "running",
+            "message": f"今天（{today}）的本期资讯正在采集中，请稍候再试",
+            "date": today,
+        })
+
+    with COLLECT_LOCK:
+        ACTIVE_COLLECT_DATES.add(today)
+
     tid = _new_task("collect")
-    th = threading.Thread(target=_run_collect, args=(tid,), daemon=True)
+    th = threading.Thread(target=_run_collect, args=(tid, today), daemon=True)
     th.start()
     return jsonify({
         "status": "started",
@@ -437,6 +491,22 @@ def api_task(tid: str):
             "message": "任务已失效，请重新启动"
         }), 200
     return jsonify(task)
+
+
+@app.route("/api/cleanup", methods=["POST"])
+def api_cleanup():
+    """手动触发期刊保留清理（每次采集后也会自动执行）。
+
+    请求体可选：{"keep": 5, "dry_run": false}
+    """
+    try:
+        payload = request.get_json(silent=True) or {}
+        keep = int(payload.get("keep", REPORT_RETAIN_ISSUES))
+        dry_run = bool(payload.get("dry_run", False))
+        result = cleanup_old_issues(keep=keep, dry_run=dry_run)
+        return jsonify({"status": "ok", **result})
+    except Exception as exc:
+        return jsonify({"status": "failed", "message": f"清理失败：{exc}"}), 500
 
 
 @app.route("/api/export", methods=["POST", "GET"])
