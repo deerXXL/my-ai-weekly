@@ -24,6 +24,7 @@ daily_report_*.md
 .idea/
 .vscode/
 *.swp
+.workbuddy/
 .DS_Store
 Thumbs.db
 
