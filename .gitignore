@@ -39,3 +39,4 @@ scripts/.last_sent_issue
 scripts/.last_receiver
 weekly_email.log
 run.log
+scheduler.log
