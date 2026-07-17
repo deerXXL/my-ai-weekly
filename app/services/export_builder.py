@@ -259,6 +259,21 @@ def _group_industry_by_date(newsletter: WeeklyNewsletter) -> OrderedDict[str, li
     return grouped
 
 
+def _render_hot_topics(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> list[str]:
+    """从 industry_news 中取前 N 条作为热点资讯（放在行业动态上方）。"""
+    count = cfg.hot_topics_count
+    top_items = newsletter.industry_news[:count]
+    if not top_items:
+        return []
+    lines = [f"## {cfg.hot_topics.icon} {cfg.hot_topics.label}", ""]
+    for i, item in enumerate(top_items, 1):
+        lines.append(f"**{i}. {item.title}**")
+        lines.append("")
+        lines.append(f"{LIST_INDENT}{item.summary.strip()}")
+        lines.append("")
+    return lines
+
+
 def _render_industry(newsletter: WeeklyNewsletter, cfg: NewsletterConfig) -> list[str]:
     grouped = _group_industry_by_date(newsletter)
     if not grouped:
@@ -315,6 +330,7 @@ def build_export_markdown(report: dict | WeeklyNewsletter | None = None) -> str:
     cfg = load_newsletter_config()
     lines: list[str] = []
     lines.extend(_render_overview(newsletter, cfg))
+    lines.extend(_render_hot_topics(newsletter, cfg))
     lines.extend(_render_industry(newsletter, cfg))
     lines.extend(_render_tech_summary(newsletter, cfg))
     return "\n".join(lines).rstrip() + "\n"
@@ -323,6 +339,30 @@ def build_export_markdown(report: dict | WeeklyNewsletter | None = None) -> str:
 def _format_bullet_html(text: str) -> str:
     escaped = escape(text)
     return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
+
+
+def _render_feasibility_bullet(text: str) -> str:
+    """将 '**标签：** 描述' 解析为「彩色标签 + 描述」的列表项；无标签则纯文本。
+
+    支持两种写法：
+      - '**政府场景：** 阿尔伯塔省...'  → 标签 chip + 描述
+      - '**政府场景** 阿尔伯塔省...'    → 同上（无冒号）
+      - '需同步配套...'                → 纯文本条目
+    """
+    s = text.strip()
+    m = re.match(r"^\*\*(.+?)\*\*\s*[:：]\s*(.*)$", s)
+    if not m:
+        m = re.match(r"^\*\*(.+?)\*\*\s+(.*)$", s)
+    if m:
+        label = m.group(1).strip()
+        desc = m.group(2).strip()
+        return (
+            f'<li class="feas-item">'
+            f'<span class="feas-tag">{escape(label)}</span>'
+            f'<span class="feas-desc">{escape(desc)}</span>'
+            f"</li>"
+        )
+    return f'<li class="feas-item feas-plain">{escape(s)}</li>'
 
 
 def build_export_html(
@@ -374,15 +414,38 @@ def build_export_html(
 
     feasibility_html = []
     if tech and tech.feasibility:
-        for group in tech.feasibility:
-            bullets = "".join(
-                f"<li>{_format_bullet_html(b)}</li>" for b in group.bullets
+        for idx, group in enumerate(tech.feasibility, 1):
+            bullets_html = "".join(
+                _render_feasibility_bullet(b) for b in group.bullets
             )
+            summary_html = ""
+            if group.summary.strip():
+                summary_html = (
+                    f'<p class="feas-summary">{escape(group.summary.strip())}</p>'
+                )
             feasibility_html.append(
-                f'<div class="trend-item">'
-                f"<p class=\"trend-heading\"><strong>{escape(group.title)}</strong></p>"
-                f"<ul class=\"feasibility-list\">{bullets}</ul>"
+                f'<div class="feas-card">'
+                f'<div class="feas-header">'
+                f'<span class="feas-badge">{idx}</span>'
+                f'<span class="feas-title">{escape(group.title)}</span>'
                 f"</div>"
+                f"{summary_html}"
+                f'<ul class="feas-list">{bullets_html}</ul>'
+                f"</div>"
+            )
+
+    # ---- 热点资讯（行业动态上方）----
+    hot_items = newsletter.industry_news[:cfg.hot_topics_count]
+    hot_html = []
+    if hot_items:
+        for i, item in enumerate(hot_items, 1):
+            hot_html.append(
+                f'<div class="hot-item">'
+                f'<span class="hot-rank">{i}</span>'
+                f'<div class="hot-content">'
+                f'<p class="hot-title"><strong>{escape(item.title)}</strong></p>'
+                f'<p class="hot-summary">{escape(item.summary)}</p>'
+                f'</div></div>'
             )
 
     tech_block = ""
@@ -405,39 +468,93 @@ def build_export_html(
             f'alt="{escape(newsletter.brand_name)}封面">'
         )
 
+    # 邮件安全布局：外层 100% 宽 table 居中 + 内层固定宽 table
+    # 兼容 Outlook（Word 引擎）/ Gmail / Apple Mail 等主流邮件客户端
+    hot_section = ""
+    if hot_html:
+        hot_section = f"""
+<section>
+  <h2>{cfg.hot_topics.icon} {cfg.hot_topics.label}</h2>
+  <div class="hot-list">
+    {''.join(hot_html)}
+  </div>
+</section>
+"""
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape(newsletter.brand_name)}</title>
+<!--[if mso]>
+<style type="text/css">
+  body,table,td{{font-family:Arial,sans-serif !important;}}
+</style>
+<![endif]-->
 <style>
-  body {{
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    max-width: 720px; margin: 0 auto; padding: 32px 24px;
-    color: #222; line-height: 1.7; background: #fff;
+  body {{margin:0;padding:0;background-color:#f4f4f4;}}
+  .wrapper-table {{width:100%;background-color:#f4f4f4;}}
+  .content-table {{width:720px;max-width:92%;margin:0 auto;background-color:#fff;
+                   border-radius:8px;}}
+  .inner-padding {{padding:32px 28px;}}
+  body {{font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
+            color:#222;line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased;}}
+  h1 {{text-align:center;font-size:26px;margin-bottom:6px;color:#111;}}
+  hr {{border:none;border-top:1.5px solid #333;margin:16px auto 24px;width:100%;}}
+  .cover-image {{width:100%;border-radius:10px;margin:16px 0 22px;display:block;}}
+  h2 {{font-size:17px;margin-top:28px;color:#111;border-left:4px solid #a62c2c;padding-left:10px;}}
+  h3 {{font-size:15px;margin-top:18px;color:#333;}}
+  h3.date-label {{color:#d95030;font-weight:600;font-size:14px;}}
+  .meta p {{margin:6px 0;font-size:14px;color:#444;}}
+  /* 热点资讯 */
+  .hot-list {{margin:12px 0 8px;}}
+  .hot-item {{display:flex;gap:12px;margin-bottom:14px;padding:10px 12px;
+               background:#fff8f0;border-left:3px solid #e6a23c;border-radius:6px;}}
+  .hot-rank {{flex-shrink:0;width:24px;height:24px;line-height:24px;text-align:center;
+              background:#e6a23c;color:#fff;border-radius:50%;font-size:13px;font-weight:bold;}}
+  .hot-content {{flex:1;min-width:0;}}
+  .hot-title {{margin:0 0 4px;font-size:14px;font-weight:600;}}
+  .hot-summary {{margin:0;color:#555;font-size:13px;line-height:1.6;}}
+  /* 行业动态 */
+  .news-item {{margin-bottom:18px;padding-bottom:14px;border-bottom:1px dashed #e0e0e0;}}
+  .news-item:last-child {{border-bottom:none;}}
+  .news-image {{max-width:100%;border-radius:8px;margin-bottom:8px;display:block;}}
+  .news-title {{margin-bottom:5px;font-weight:600;font-size:14.5px;}}
+  .news-summary {{margin:0 0 6px 16px;color:#444;font-size:14px;}}
+  .news-usage {{margin:0 0 0 16px;color:#666;font-size:13px;
+                 background:#f9f9f9;padding:6px 10px;border-radius:4px;display:inline-block;}}
+  /* 技术总结 - 核心趋势 */
+  .trend-item {{margin-bottom:16px;padding:12px 14px;background:#f8fafc;border-radius:6px;border-left:3px solid #365772;}}
+  .trend-heading {{margin-bottom:5px;font-size:14.5px;color:#1a3c5e;}}
+  .trend-body {{margin:0 0 0 12px;color:#444;font-size:14px;}}
+  /* 可行性思考 - 卡片化 */
+  .feas-card {{margin-bottom:16px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;}}
+  .feas-header {{background:#eef2f7;padding:9px 14px;font-weight:600;font-size:14.5px;color:#1a3c5e;border-bottom:2px solid #365772;}}
+  .feas-summary {{margin:0;padding:9px 14px 0;font-size:13px;color:#5a6b7b;line-height:1.6;font-style:italic;}}
+  .feas-badge {{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;background:#365772;color:#fff;border-radius:50%;font-size:12px;font-weight:bold;margin-right:8px;}}
+  .feas-title {{vertical-align:middle;}}
+  .feas-list {{margin:0;padding:12px 14px 6px;list-style:none;}}
+  .feas-item {{margin-bottom:11px;font-size:14px;line-height:1.6;}}
+  .feas-item:last-child {{margin-bottom:4px;}}
+  .feas-tag {{display:inline-block;background:#e3eef7;color:#365772;font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:top;}}
+  .feas-desc {{color:#444;}}
+  .feas-plain {{color:#444;}}
+  ul {{padding-left:20px;}}
+  a {{color:#d95030;text-decoration:none;}} a:hover {{text-decoration:underline;}}
+  @media only screen and (max-width:600px) {{
+    .content-table {{width:100%!important;max-width:100%!important;border-radius:0;}}
+    .inner-padding {{padding:20px 16px!important;}}
+    h1 {{font-size:22px!important;}}
+    h2 {{font-size:16px!important;}}
   }}
-  h1 {{ text-align: center; font-size: 28px; margin-bottom: 8px; }}
-  hr {{ border: none; border-top: 1px solid #333; margin: 16px 0 24px; }}
-  .cover-image {{ width: 100%; border-radius: 12px; margin: 16px 0 24px; display: block; }}
-  h2 {{ font-size: 18px; margin-top: 32px; }}
-  h3 {{ font-size: 15px; margin-top: 20px; }}
-  h3.date-label {{ color: #007bff; font-weight: 600; }}
-  .meta p {{ margin: 6px 0; }}
-  .news-item {{ margin-bottom: 20px; }}
-  .news-image {{ max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; }}
-  .news-title {{ margin-bottom: 6px; font-weight: 600; }}
-  .news-summary {{ margin: 0 0 8px 16px; color: #444; }}
-  .news-usage {{ margin: 0 0 0 16px; color: #555; font-size: 14px; }}
-  .trend-item {{ margin-bottom: 20px; }}
-  .trend-heading {{ margin-bottom: 6px; }}
-  .trend-body {{ margin: 0 0 0 16px; color: #444; }}
-  .feasibility-list {{ margin: 4px 0 0 16px; padding-left: 20px; }}
-  ul {{ padding-left: 20px; }}
-  a {{ color: #007bff; }}
 </style>
 </head>
 <body>
+<table class="wrapper-table" role="presentation" cellspacing="0" cellpadding="0" border="0">
+<tr><td align="center" valign="top">
+<table class="content-table" role="presentation" cellspacing="0" cellpadding="0" border="0">
+<tr><td class="inner-padding">
   <h1>{escape(newsletter.brand_name)}</h1>
   <hr>
   <section>
@@ -449,11 +566,16 @@ def build_export_html(
     </div>
     {cover_html}
   </section>
+  {hot_section}
   <section>
     <h2>{cfg.industry.icon} {cfg.industry.label}</h2>
     {''.join(industry_html)}
   </section>
   {tech_block}
+</td></tr>
+</table>
+</td></tr>
+</table>
 </body>
 </html>
 """

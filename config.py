@@ -106,9 +106,11 @@ class NewsletterConfig:
     default_editor: str
     period_days: int
     overview: SectionStyle
+    hot_topics: SectionStyle
     industry: SectionStyle
     tech_summary_icon: str
     tech_summary_label_prefix: str
+    hot_topics_count: int = 5
 
 
 def load_newsletter_config(path: Path | None = None) -> NewsletterConfig:
@@ -116,6 +118,7 @@ def load_newsletter_config(path: Path | None = None) -> NewsletterConfig:
     with open(config_path, "r", encoding="utf-8") as f:
         raw = json.load(f)
     sections = raw["sections"]
+    hot_sec = sections.get("hot_topics", {})
     return NewsletterConfig(
         brand_name=raw["brand_name"],
         default_editor=raw["default_editor"],
@@ -124,12 +127,17 @@ def load_newsletter_config(path: Path | None = None) -> NewsletterConfig:
             icon=sections["overview"]["icon"],
             label=sections["overview"]["label"],
         ),
+        hot_topics=SectionStyle(
+            icon=hot_sec.get("icon", "🔥"),
+            label=hot_sec.get("label", "热点资讯"),
+        ),
         industry=SectionStyle(
             icon=sections["industry"]["icon"],
             label=sections["industry"]["label"],
         ),
         tech_summary_icon=sections["tech_summary"]["icon"],
         tech_summary_label_prefix=sections["tech_summary"]["label_prefix"],
+        hot_topics_count=int(raw.get("hot_topics_count", 5)),
     )
 
 

@@ -71,6 +71,7 @@ class NumberedBulletGroup:
     index: int
     title: str
     bullets: list[str] = field(default_factory=list)
+    summary: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -81,6 +82,7 @@ class NumberedBulletGroup:
             index=int(data["index"]),
             title=data["title"],
             bullets=list(data.get("bullets") or []),
+            summary=data.get("summary") or "",
         )
 
 

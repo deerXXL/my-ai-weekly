@@ -426,12 +426,12 @@ def compose_newsletter(candidates: list[dict], max_items: int = 6) -> dict:
     # 注意：模型在 bullets 文本里常写出未转义的双引号（如 "渐进渗透"），
     # 导致 JSON 解析失败。这里第一次用较大 token 避免截断；
     # 若仍解析失败，重试一次（重新生成通常能得到合法 JSON）。
-    raw = call_llm(prompt, max_tokens=4096)
+    raw = call_llm(prompt, max_tokens=6144)
     try:
         return parse_json_response(raw)
     except Exception as exc:
         print(f"❌ compose 首次解析失败：{exc}，重试一次…")
-        raw = call_llm(prompt, max_tokens=6144)
+        raw = call_llm(prompt, max_tokens=8192)
         return parse_json_response(raw)
 
 

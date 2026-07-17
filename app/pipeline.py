@@ -178,6 +178,7 @@ def _build_tech_summary(data: dict) -> TechSummarySection:
             index=int(f.get("index", i + 1)),
             title=f.get("title") or f"方向{i + 1}",
             bullets=list(f.get("bullets") or []),
+            summary=f.get("summary") or "",
         )
         for i, f in enumerate(raw.get("feasibility") or [])
     ]
