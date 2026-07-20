@@ -118,6 +118,11 @@ def cleanup_old_issues(keep: int | None = None, dry_run: bool = False) -> dict:
                     path.unlink()
             removed.append(str(path))
 
+    # 删除后按日期升序重排剩余期号，避免留空档
+    # （如删掉第1期后，原第2、3期重排为第1、2期，保持连续递增）
+    if not dry_run:
+        renumber_all_issues()
+
     return {
         "keep": keep,
         "kept_periods": sorted({it[1].isoformat() for it in items if it[1] in keep_keys}, reverse=True),
@@ -126,3 +131,59 @@ def cleanup_old_issues(keep: int | None = None, dry_run: bool = False) -> dict:
         "removed_count": len(removed),
         "dry_run": bool(dry_run),
     }
+
+
+def renumber_all_issues() -> int:
+    """按日期升序把磁盘上所有期重新连续编号为 1..N，并同步 latest.json。
+
+    用于定期删除（cleanup_old_issues）之后，使保留下来的期号不留空档、连续递增。
+    排序键优先用 ``period_start``（周期起点），回退单天 ``date``，保证按周期先后连续。
+    新生成的当期若已写入磁盘，也会被纳入并排在序列末尾（编号最大）。
+
+    Returns:
+        重排后的期数 N。若无任何期刊则返回 0。
+    """
+    candidates = []
+    for date_str, path, is_dir in _iter_issue_candidates():
+        nj = (path / "newsletter.json") if is_dir else path
+        try:
+            with open(nj, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            continue
+        sort_date = (
+            _parse_date(data.get("period_start"))
+            or _parse_date(data.get("date"))
+            or date.min
+        )
+        candidates.append((sort_date, date_str, path, is_dir, data))
+
+    candidates.sort(key=lambda c: c[0])  # 日期升序
+    n = 0
+    for i, (_, date_str, path, is_dir, data) in enumerate(candidates, 1):
+        data["issue_number"] = i
+        target = (path / "newsletter.json") if is_dir else path
+        with open(target, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        n = i
+
+    # 同步 latest.json 的 issue_number 为最新一期（升序最后即最新）
+    _sync_latest_issue_number(n)
+    return n
+
+
+def _sync_latest_issue_number(issue_no: int | None) -> None:
+    """把 latest.json 里的顶层 issue_number 更新为最新一期号（不改动其他字段）。"""
+    if not issue_no:
+        return
+    lp = OUTPUT_DIR / "latest.json"
+    if not lp.exists():
+        return
+    try:
+        with open(lp, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        data["issue_number"] = issue_no
+        with open(lp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass

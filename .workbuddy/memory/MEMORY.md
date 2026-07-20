@@ -39,12 +39,29 @@
 - **永不删空（2026-07-16 末次加固）**：`cleanup_old_issues` 内 `keep = max(1, keep or REPORT_RETAIN_ISSUES)`，
   先判 `None` 再取下限 1，保证网页永远至少留 1 期内容（满足用户「网页有内容」诉求）。
 - 触发时机：每次 `/api/collect` 成功跑完后在 `_run_collect` 末尾自动调用（"从现在开始"生效，不回删历史）。
+
+## 网页(Render)自动更新架构（2026-07-20 定稿）
+- **结论**：GitHub Action 自动更新**不可靠**——它在 GitHub 境外 Runner 跑，连不上火山方舟北京端点
+  `ark.cn-beijing.volces.com`，生成必失败、不会 commit，故 Render 不更新。今天(7.20, ISO第30周偶数)没更新即此因。
+- **可靠方案（已落地）**：让 **Linux 服务器（在中国，能连北京端点）既生成又推送**。
+  - `weekly_send.sh` 已在 `generate+send` 之后追加 `git add output/ && git commit && git push origin/Laurtiv27 main`
+    （仅 14 天节流通过、确有新刊时才推，避免空推）。
+  - 前提：Linux 配 **SSH key** 并 `git remote set-url origin git@github.com:deerXXL/my-ai-weekly.git`
+    （HTTPS 会被 GnuTLS 拦，SSH 一劳永逸），公钥粘到 GitHub → Settings → SSH keys。
+  - Render 默认开 **Auto-Deploy**，检测到 push 自动重新部署 → 网页更新。需确认 Render 控制台此项为开启。
+- **务必禁用 GitHub Action**（`Generate AI Weekly`，仓库 Actions 页 Disable），否则它与 Linux 可能双生成/推送冲突。
+- 远程有两个：`origin`(deerXXL)、`Laurtiv27`，Render 只连其一；脚本两个都推以覆盖。
+- ⚠️ 本地沙箱**无 GitHub 凭据**，git push 必须由用户在本机终端执行（凭据管理器弹不出窗）。
   另提供手动接口 `POST /api/cleanup`（body `{"keep":5,"dry_run":false}`）。
-- **周期边界对齐周一（2026-07-16 修正）**：原 `config.issue_period()` 是「now-13天→now」滚动窗口，起点落任意星期。
-  改为**以周一为锚点的双周块**：`PERIOD_ANCHOR=datetime(2026,7,20)`（用户指定下周一，须为周一，可用 env
-  `AI_WEEKLY_PERIOD_ANCHOR=YYYY-MM-DD` 覆盖）；`slot=(now-anchor).days//period_days`，
-  `start=anchor+slot*period_days`，`end=start+period_days-1`。结果：起点恒周一、块长14天、相邻块相隔14天无重叠，
-  任意触发日落在对应块内。`pipeline.py` 与 `report_builder.py` 都走此函数，两条生成路径同步生效。
+- **周期边界对齐周一（2026-07-16 加，2026-07-20 修正方向）**：原 `config.issue_period()` 是「now-13天→now」滚动窗口。
+  7-16 改为以周一为锚点的双周块，但误用「包含今天、向前延伸」(`start=anchor+slot*14, end=start+13`) → 生成**未来区间**
+  (如 7.20 生成为 `7.20—8.2`)，方向反了，用户反馈后修正。
+  **2026-07-20 修正**：改为「截止到生成日、往回推 14 天，起点对齐周一」：
+  `this_monday = now - timedelta(days=now.weekday()); start = this_monday - period_days天; end = now`。
+  结果：起点恒周一、终点为生成当天（与 `--days 14` 抓取窗口一致），永远是**过去区间**；
+  下个双周块无缝衔接（7.20→`[7.6,7.20]`，8.3→`[7.20,8.3]`）。
+  `PERIOD_ANCHOR=datetime(2026,7,20)` 仍保留（env `AI_WEEKLY_PERIOD_ANCHOR` 可覆盖），仅作周一基准，不再用于向前切块。
+  `pipeline.py` 走此函数生成概览时间范围（date_start/date_end/period_start/period_end）。
   目录名仍用生成日 `date_tag`，不参与周期计算；旧数据（7/1、7/2 等）保持原样不回改。
   `python -c "from app.services.retention import cleanup_old_issues; ..."` 调用，**不经过网页 /api/collect**，
   保持单线、独立于网页。每次 cron 触发（每周一 09:00）都执行清理；发送仍受 14 天门槛（双周）控制。

@@ -5,3 +5,9 @@
 # 源码统一 LF：weekly_send.sh / retention.py 在远端 Linux 运行，LF 更友好，并消除 CRLF 警告
 *.py text eol=lf
 *.sh text eol=lf
+# 配置/数据/文档统一 LF（output/ 下的 json/html/md 也会被 Git 追踪）
+*.json text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf

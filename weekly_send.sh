@@ -26,3 +26,17 @@ fi
 /home/jinqi/my-ai-weekly/venv/bin/python generate_weekly.py --days 14
 /home/jinqi/my-ai-weekly/venv/bin/python send_md_email.py
 echo "$NOW" > "$STATE"
+
+# —— 推送到 GitHub，触发 Render 自动重新部署网页（自动更新核心）——
+# 前提：本机已配置 SSH 公钥到 GitHub（见下方部署说明），且 remote 为 SSH 地址。
+# 仅在新一期已生成时执行（上方已通过 14 天节流判断），避免空推。
+cd /home/jinqi/my-ai-weekly
+# cron 非交互环境：跳过首次 SSH host 确认，避免卡死
+export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+git config user.email "bot@ai-weekly.local"
+git config user.name "ai-weekly-bot"
+git add output/ latest.json .latest 2>/dev/null
+git commit -m "Auto update weekly $(date +%Y-%m-%d)" || echo "（无新内容，跳过 commit）"
+# 推送到两个 remote（Render 只连其中一个，两个都推以覆盖）；用 ; 保证都尝试
+git push origin main 2>&1; git push Laurtiv27 main 2>&1
+echo "$(date) 推送完成，等待 Render 自动部署"

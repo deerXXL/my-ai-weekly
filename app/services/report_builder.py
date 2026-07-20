@@ -9,14 +9,20 @@ from app.models.daily_report import (
 from config import issue_period, OUTPUT_DIR
 
 
-def _calc_issue_number() -> int:
-    """统计已有周刊目录/文件数，返回下一期号（从 1 开始）。"""
+def _calc_issue_number(exclude_date_tag: str | None = None) -> int:
+    """统计已有周刊目录数，返回下一期号（从 1 开始）。
+
+    ``exclude_date_tag`` 传入正在生成的当期目录名（如 ``2026-07-20``），
+    避免重跑进已存在目录时把自己也算进去，导致期号多 1。
+    """
     count = 0
     if OUTPUT_DIR.exists():
-        count += sum(1 for p in OUTPUT_DIR.glob("weekly-*/newsletter.json") if p.is_file())
-        for p in OUTPUT_DIR.glob("weekly-*.json"):
-            if p.name != "latest.json" and p.is_file():
-                count += 1
+        for p in OUTPUT_DIR.glob("weekly-*/newsletter.json"):
+            if not p.is_file():
+                continue
+            if exclude_date_tag and p.parent.name == f"weekly-{exclude_date_tag}":
+                continue
+            count += 1
     return count + 1
 
 

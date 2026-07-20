@@ -28,19 +28,25 @@ MAX_LLM_WORKERS = 5
 MAX_IMAGE_WORKERS = 5
 
 
-def _calc_issue_number() -> int:
-    """统计已有周刊目录/文件数，返回下一期号（从 1 开始）。"""
+def _calc_issue_number(exclude_date_tag: str | None = None) -> int:
+    """统计已有周刊目录数，返回下一期号（从 1 开始）。
+
+    ``exclude_date_tag`` 传入正在生成的当期目录名（如 ``2026-07-20``），
+    避免重跑进已存在目录时把自己也算进去，导致期号多 1。
+    """
     from pathlib import Path
     from config import OUTPUT_DIR
 
     count = 0
     if OUTPUT_DIR.exists():
         # 新格式：output/weekly-YYYY-MM-DD/newsletter.json
-        count += sum(1 for p in OUTPUT_DIR.glob("weekly-*/newsletter.json") if p.is_file())
-        # 旧格式：output/weekly-YYYY-MM-DD.json（排除 latest.json）
-        for p in OUTPUT_DIR.glob("weekly-*.json"):
-            if p.name != "latest.json" and p.is_file():
-                count += 1
+        for p in OUTPUT_DIR.glob("weekly-*/newsletter.json"):
+            if not p.is_file():
+                continue
+            # 跳过正在生成的当期目录
+            if exclude_date_tag and p.parent.name == f"weekly-{exclude_date_tag}":
+                continue
+            count += 1
     return count + 1
 
 
@@ -274,7 +280,7 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
         generated_at=now.strftime("%Y-%m-%d %H:%M:%S"),
         period_start=date_start,
         period_end=date_end,
-        issue_number=_calc_issue_number(),
+        issue_number=_calc_issue_number(date_tag),
     )
 
     issue_dir = ensure_issue_dir(date_tag)

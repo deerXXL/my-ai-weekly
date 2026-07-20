@@ -27,6 +27,15 @@ def main():
     write_json(report)
     print("Weekly report generated.")
 
+    # 生成完成后按日期重排所有期号，确保连续（定期删除后不留空档，
+    # 例如删掉最旧一期后，剩余期自动变为 1、2、3…）
+    from app.services.retention import renumber_all_issues
+    try:
+        n = renumber_all_issues()
+        print(f"期刊期号已按日期重排，当前共 {n} 期")
+    except Exception as e:
+        print(f"⚠️ 期号重排跳过：{e}")
+
 
 if __name__ == "__main__":
     main()
