@@ -149,11 +149,10 @@ def format_date_label(value: datetime) -> str:
     return f"{value.month}月{value.day}·{WEEKDAY_CN[value.weekday()]}"
 
 
-# 双周周期锚点：用户指定下周一（2026-07-20，必须为周一）起为第 0 个双周块。
-# 此后以 period_days（默认 14，须为 7 的倍数）天为一个块，块起点恒为周一、
-# 块长 period_days 天（周一~周日），相邻块首尾相接、无重叠。
-# 这样无论何时触发生成，落点都对齐到对应的双周块内，保证
-# 「每期周期边界对齐周一 + 保持两周的周期距离」。可用 AI_WEEKLY_PERIOD_ANCHOR 覆盖。
+# 双周周期：周刊总结“刚过去的两周”，本期周期 = [生成日所在周一 - period_days 天, 生成日]。
+# - 起点对齐到周一（PERIOD_ANCHOR 须为周一，且 period_days 为 7 的倍数）；
+# - 终点为生成当天，方向与“最近 period_days 天”抓取窗口一致，绝不会出现未来区间；
+# - 任意触发日都落到对应区间，周期边界稳定可复现。可用 AI_WEEKLY_PERIOD_ANCHOR 覆盖锚点（仅用于确定周一基准）。
 _PERIOD_ANCHOR_STR = _getenv("AI_WEEKLY_PERIOD_ANCHOR", "2026-07-20")
 try:
     PERIOD_ANCHOR = datetime.strptime(_PERIOD_ANCHOR_STR, "%Y-%m-%d")
@@ -165,20 +164,17 @@ def issue_period(
     period_days: int = 14,
     today: datetime | None = None,
 ) -> tuple[str, str]:
-    """返回本期时间范围（双周块，起点恒为周一）。
+    """返回本期时间范围（双周，截止到生成日、向过去推 period_days 天）。
 
-    以 ``PERIOD_ANCHOR``（一个周一）为基准，把时间轴切成若干 period_days 天长的块；
-    第 k 个块 = [锚点 + k*period_days, 锚点 + k*period_days + period_days-1]。
-    给定 ``today``，取包含它的那个块作为本期周期，因此：
-    - 块起点恒为周一（锚点是周一、period_days 为 7 的倍数）；
-    - 相邻块严格相隔 period_days 天（两周距离），不重叠、不遗漏；
-    - 任意触发日都落在对应块内，周期边界稳定可复现。
+    周刊总结的是“刚过去的两周”，因此本期周期 = [生成日所在周一 - period_days 天, 生成日]：
+    - 起点对齐到周一（与 PERIOD_ANCHOR 的周一约定一致）；
+    - 终点为生成当天，与 ``--days`` 抓取窗口（最近 period_days 天）保持一致，不会出现未来区间；
+    - 任意触发日都落到对应区间，周期边界稳定可复现。
     """
     now = today or datetime.now()
-    total_days = (now - PERIOD_ANCHOR).days
-    slot = total_days // period_days  # 每 period_days 天一个块（负天数向下取整，仍对齐）
-    start = PERIOD_ANCHOR + timedelta(days=slot * period_days)
-    end = start + timedelta(days=period_days - 1)
+    this_monday = now - timedelta(days=now.weekday())
+    start = this_monday - timedelta(days=period_days)
+    end = now
     return format_chinese_date(start), format_chinese_date(end)
 
 

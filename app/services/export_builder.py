@@ -495,7 +495,7 @@ def build_export_html(
 <style>
   body {{margin:0;padding:0;background-color:#f4f4f4;}}
   .wrapper-table {{width:100%;background-color:#f4f4f4;}}
-  .content-table {{width:720px;max-width:92%;margin:0 auto;background-color:#fff;
+  .content-table {{width:100%!important;max-width:100%!important;margin:0 auto;background-color:#fff;
                    border-radius:8px;}}
   .inner-padding {{padding:32px 28px;}}
   body {{font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -551,9 +551,9 @@ def build_export_html(
 </style>
 </head>
 <body>
-<table class="wrapper-table" role="presentation" cellspacing="0" cellpadding="0" border="0">
+<table class="wrapper-table" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
 <tr><td align="center" valign="top">
-<table class="content-table" role="presentation" cellspacing="0" cellpadding="0" border="0">
+<table class="content-table" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
 <tr><td class="inner-padding">
   <h1>{escape(newsletter.brand_name)}</h1>
   <hr>
