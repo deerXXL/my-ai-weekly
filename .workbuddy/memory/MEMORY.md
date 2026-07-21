@@ -26,6 +26,15 @@
 - QQ邮箱 SMTP 需要 `port=465, smtp_ssl=True`。
 - yagmail 依赖链：`yagmail` → `premailer` → `cssutils` → `more-itertools`，缺 `more-itertools` 会报 `ModuleNotFoundError`。
 
+## 可行性思考输出格式约定（2026-07-21 定稿，用户明确要求）
+- 用户要求「可行性思考」围绕**作用/价值**展开，不要写成热点技术集结；每个方向要落到**具体、带画面感的例子**，有概括也有偏向。
+- 模板位置：`prompts/compose_newsletter.md` 的 `feasibility` 段与下方约束。改格式只动这里，解析代码 `app/services/export_builder.py` 不用改。
+- 单条结构（JSON 字段不变：`title`/`summary`/`bullets`，仍 3 条）：
+  - `title`：作用导向，如「长文档与知识库自动处理：把海量资料变成可问答、可对比、可摘要的结构化信息」。具体模型/产品只在 bullets 里当支撑案例。
+  - `bullets`（5-7 条，顺序固定）：`**落地难点：**` → `**可落地项目：**`(总起) → 2-3 个 `**具体例子名：**`（独立 bullet，写清谁/输入/做了什么/产出） → `**不建议场景：**` → `**量化参考：**`(可选，须含真实数字+局限)。
+  - 渲染器 `_render_feasibility_bullet` 只解析行首 `**标签：**` 为彩色 chip；故描述内**禁止**再用 `**` 加粗（会显示成字面星号）。
+- 手动改过的最新一期 `output/weekly-2026-07-20` 即此风格样板；旧期数据保持原样不回改。
+
 ## 期刊保留策略与并发锁（2026-07-16 新增，同日修正为「按周期」）
 - 保留期数：`config.REPORT_RETAIN_ISSUES`（默认 5，环境变量 `AI_WEEKLY_RETAIN_ISSUES` 可覆盖）。
   含义 = 仅保留最近 **N 个不重复周期** 的期，更旧的自动删除。
@@ -71,3 +80,8 @@
   兜底，使"今天正在采集中"再点 `/api/collect` 返回 `status:"running"` 而不双跑；原有"同一天文件已存在"
   仍返回 `already_updated`。前端 `runCollect` 已把 `running` 当提示（非报错）处理。
 - 网页浏览侧：`/api/archive` 本就按日期去重列举现有目录，清理后自然只展示 ≤N 期不重复日期的期刊。
+
+## Linux 全自动部署状态（2026-07-20 最终确认）
+- **5 项前提全部就绪并验证通过**：`.env`(ARK+SMTP)、`yagmail`+`more-itertools`、git 身份 `ai-weekly-bot`、SSH ed25519 公钥(GitHub 已认证)、`generate_weekly.py` 能跑通。
+- **邮件始发期 = 下周一 7.27**（`.last_send` 已删除），之后每双周周一 cron 自动：清理→生成→发送→push→Render 重部署。
+- 用户最终选择**纯 Linux 全自动**（不混合 Windows）。本地仅负责改代码→push→Linux pull。
