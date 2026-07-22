@@ -37,6 +37,6 @@ git config user.email "bot@ai-weekly.local"
 git config user.name "ai-weekly-bot"
 git add output/ latest.json .latest 2>/dev/null
 git commit -m "Auto update weekly $(date +%Y-%m-%d)" || echo "（无新内容，跳过 commit）"
-# 推送到两个 remote（Render 只连其中一个，两个都推以覆盖）；用 ; 保证都尝试
-git push origin main 2>&1; git push Laurtiv27 main 2>&1
+# 推送到 origin（Render 连此远程即自动重部署）；Laurtiv27 无写权限已移除
+git push origin main 2>&1
 echo "$(date) 推送完成，等待 Render 自动部署"
