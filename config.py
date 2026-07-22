@@ -111,6 +111,7 @@ class NewsletterConfig:
     tech_summary_icon: str
     tech_summary_label_prefix: str
     hot_topics_count: int = 5
+    industry_max_count: int = 12
 
 
 def load_newsletter_config(path: Path | None = None) -> NewsletterConfig:
@@ -138,6 +139,7 @@ def load_newsletter_config(path: Path | None = None) -> NewsletterConfig:
         tech_summary_icon=sections["tech_summary"]["icon"],
         tech_summary_label_prefix=sections["tech_summary"]["label_prefix"],
         hot_topics_count=int(raw.get("hot_topics_count", 5)),
+        industry_max_count=int(raw.get("industry_max_count", 12)),
     )
 
 

@@ -13,7 +13,7 @@ from app.models.daily_report import (
     TechSummarySection,
     WeeklyNewsletter,
 )
-from app.services.cover_generator import generate_cover
+from app.services.cover_generator import generate_cover, generate_hot_images
 from app.services.file_writer import write_html, write_json, write_markdown
 from app.services.filter import filter_items
 from app.services.issue_paths import ensure_issue_dir
@@ -297,6 +297,10 @@ def run_pipeline(analyze_limit: int = ANALYZE_LIMIT) -> WeeklyNewsletter:
             newsletter.overview.cover_image = (
                 f"{issue_dir.name}/{cover_path}"
             )
+
+        # 热点资讯 AI 配图：根据每条内容生成图，写入 item.ai_image
+        hot_ok = generate_hot_images(newsletter, issue_dir, cfg.hot_topics_count)
+        print(f"  热点AI配图 {hot_ok}/{cfg.hot_topics_count} 张")
 
     with timer.stage("写入文件"):
         write_json(newsletter)

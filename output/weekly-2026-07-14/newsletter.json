@@ -45,7 +45,7 @@
       "title": "微软 Foundry 托管算力全面接入 Hugging Face 模型",
       "summary": "微软在 Hugging Face 官方博客宣布，其 Azure AI Foundry 托管计算平台正式支持直接部署 Hugging Face 上的开源模型。开发者可在企业级 GPU 算力环境中一键运行数千款主流模型，降低自建推理服务的门槛，进一步打通开源生态与 Azure 云服务，加速企业级 AI 应用落地。",
       "url": "https://huggingface.co/blog/microsoft/foundry-managed-compute",
-      "image_url": "",
+      "image_url": "images/placeholder-hot4.png",
       "usage_note": "Azure AI Foundry用户可直接在企业级GPU上运行数千款开源模型，无需自建推理栈。"
     },
     {

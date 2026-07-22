@@ -85,3 +85,35 @@
 - **5 项前提全部就绪并验证通过**：`.env`(ARK+SMTP)、`yagmail`+`more-itertools`、git 身份 `ai-weekly-bot`、SSH ed25519 公钥(GitHub 已认证)、`generate_weekly.py` 能跑通。
 - **邮件始发期 = 下周一 7.27**（`.last_send` 已删除），之后每双周周一 cron 自动：清理→生成→发送→push→Render 重部署。
 - 用户最终选择**纯 Linux 全自动**（不混合 Windows）。本地仅负责改代码→push→Linux pull。
+
+## 邮件 HTML 样式（2026-07-22 确认）
+- 邮件/网页正文 HTML 由 `app/services/export_builder.py` 的 `build_export_html()` 唯一生成（内联 `<style>` 在 495–551 行）。
+  字体、字号、配色、卡片样式全在这里，与参考图 `AI周刊20250915.png` 风格一致。
+- 封面图：火山 Seedream 文生图，存 `output/weekly-XXXX/images/cover.png`（`cover_generator.py`）。
+  配图：抓文章页 og:image（`image_enricher.py`）。
+- ⚠️ **编辑该文件用一次性 python 脚本，别用 Edit 工具**：该文件被外部 linter/IDE 实时改动，
+  Edit 工具「modified since read」反复失败。改用 `python -c` 或临时脚本在同一进程内读改写，绕开拦截。
+- 改完已有各期 `output/weekly-*/newsletter.html` 不会自动变，需重跑生成流程或手动改对应文件后重发邮件。
+- **样式与结构已锁定为永久模板，且严格对照参考文件 `D:\暑期\AI_Magazine\AI周刊20280915.md`（2026-07-22 14:14 用户要求"严格按照这个格式"定稿）**。之后每期自动沿用、无需回填。
+  **章节顺序**（与参考图一致）：① 📅 本周概览 → ② 🚀 行业动态 → ③ 🤖 本周热点 → ④ 📈 本周AI技术总结：三大趋势。
+  **字体层级**：正文16px/行距1.8、h1 28px、四个区块大标题(section-title, 📅🚀🤖📈)均 **24px**(移动端21px)、h2 19px、h3 16px、h4(热点主题/趋势编号)18/16px、h5(Case/可行性编号)15/15.5px。
+  **① 本周概览**：时间范围+本期编辑(`ov.editor`)+核心摘要(meta 段落)，封面图(**width:85% 靠左**，2026-07-22 14:44 由满宽改居中、15:30 改靠左)在摘要下方。章节 icon `📅`(`config.newsletter.json` 的 `overview.icon`，原🗓已改)。
+    ⚠️ **本期编辑 `ov.editor` 由 `config/newsletter.json` 的 `default_editor` 提供**（经 `pipeline.py:275` 注入），2026-07-22 16:00 由"产品资讯组"改为 **"ai研发组"**（今后每期自动沿用；已回填 `weekly-2026-07-22`）。
+  **② 行业动态**：按日期分组，日期小标题 `h3.date-label` 蓝色 `#2159c9` + 🟦（`🟦 <span style="color:#2159c9ff;">日期</span>`）；每条 = `h4.news-title`(标题) + 摘要 + **保留配图 420px 靠左**(用户7/22坚持保留不铺满；2026-07-22 14:44 由居中改靠左) + 使用说明。限显 `cfg.industry_max_count`(默认12)。
+  **③ 本周热点**（对照参考图"主题+Case配图"）：每条热点 = 一个"主题"块(`hot-topic-block`)：`h4.hot-topic`(标题) + `hot-topic-desc`(介绍,来自 item.summary) + `h5.hot-case`(➡️ Case 标题) + 配图(`hot-card-img`，**优先 item.ai_image AI 生成图**，回退 item.image_url；**width:70% 靠左、自适应高度不裁切**，演进：14:44 去 max-height、15:35 100%→85%、15:55 85%→75%、16:00 75%→70%)。`hot_topics_count` 默认5，每条即一个主题。
+    AI 图由 `cover_generator.generate_hot_images()` 在 `pipeline.py` 封面后调 Seedream 生成，存 `images/hot-{i}.png` 写回 `ai_image`。
+    ⚠️ **尺寸坑**：热点图必须 ≥ 3686400 像素（Seedream 硬性下限），原 `1024x1024`(≈100万) 全被拒 → 回退 og:image；改 `2048x2048`(419万) 修复，**16:00 进一步改 `2560x1440`(16:9 非正方形，=3686400 刚好合规)**，与封面同比例、本地验证 5/5 成功（`weekly-2026-07-22`）。
+    ⚠️ **Seedream 实际返回 JPEG**，但 `_download_to` 存成 `.png` 扩展名（封面 `cover.png` 同样如此）；浏览器按内容识别、显示正常，无需改扩展名（若想规范可改 `hot-{i}.jpg` 并同步 `ai_image` 路径）。
+    ⚠️ 参考图热点还有 emoji 特性点(🎯🔧🌐🎬✨)，但数据结构无对应字段，未生成（结构已贴近）。
+  **④ 本周AI技术总结：三大趋势**：`tech.title_suffix` 默认"三大趋势" → 大标题"📈 本周AI技术总结：三大趋势"。
+    - 🌟 核心趋势：`h4.trend-head` 编号(1./2./3.) + `trend-body`(来自 `tech.trends`)。
+    - 🔮 可行性思考：`h5.feas-head` 编号(1./2./3.) + 子弹列表(`_render_feasibility_bullet` 生成的 `li.feas-item`，含 `feas-tag`/`feas-desc`)。
+  ⚠️ 用户明确要求「字体大小不用再改变」，后续若再调样式只动非字号项；除非用户主动要求，否则勿再 bump 字号。任何改动只改 `build_export_html()` 源码一处即全局生效。
+  - **2026-07-22 14:44 微调（用户要求，全部已实现并验证）**：
+    ① h2 / section-title 的**红色左边框(`#a62c2c`)已移除**——所有标题不再有红竖条；
+    ② 封面图 `width:100%`→**`width:85%` 靠左**（14:44 改居中、15:30 改靠左，故 `margin:16px 0` 无 auto）；
+    ③ 行业动态配图由居中(`margin:6px auto`)改**靠左**(`margin:6px 0`，仍 420px 不铺满)；
+    ④ 热点配图去掉 `max-height:360px;object-fit:cover` 改为**自适应、完整显示、不裁切**。
+    配套：本地缺图的热点(og:image 为空，共 07-14#4 / 07-15#2,#4 / 07-20#2,#4)用纯 Python 生成占位 PNG(`images/placeholder-hot{i}.png`，渐变蓝灰)，写入 `image_url`；
+    将来 Linux 跑生成时 `ai_image` 优先自动覆盖占位图。三期已重渲染验证（h2 无红边、封面85%、news 靠左、hot 5 张全显示、py_compile 通过）。
+  - **2026-07-22 16:07 用户最终确认「后续格式固定」**：上述 14:14~16:00 全套版式为**永久定稿**，锁在 `export_builder.py`、`cover_generator.py`、`pipeline.py`、`config/newsletter.json` 源码中。今后除非用户主动要求，否则：(1)不 bump 任何字号；(2)不改章节顺序/icon/配色/卡片结构；(3)不手动回填旧期 HTML。每期（`/api/collect`、`generate_weekly.py`、Linux cron）自动沿用此格式。

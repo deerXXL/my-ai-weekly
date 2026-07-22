@@ -1,12 +1,24 @@
 {
   "brand_name": "闪联AI周刊",
-  "default_editor": "产品资讯组",
+  "default_editor": "ai研发组",
   "period_days": 14,
   "sections": {
-    "overview": {"icon": "🗓", "label": "本周概览"},
-    "hot_topics": {"icon": "🔥", "label": "热点资讯"},
-    "industry": {"icon": "🚀", "label": "行业动态"},
-    "tech_summary": {"icon": "📈", "label_prefix": "本周AI技术总结"}
+    "overview": {
+      "icon": "📅",
+      "label": "本周概览"
+    },
+    "hot_topics": {
+      "icon": "🤖",
+      "label": "本周热点"
+    },
+    "industry": {
+      "icon": "🚀",
+      "label": "行业动态"
+    },
+    "tech_summary": {
+      "icon": "📈",
+      "label_prefix": "本周AI技术总结"
+    }
   },
   "hot_topics_count": 5
 }

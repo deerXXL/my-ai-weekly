@@ -29,7 +29,7 @@
       "title": "微软Foundry托管算力上线Hugging Face模型",
       "summary": "微软在Hugging Face发布博文，宣布其Azure AI Foundry托管算力服务正式支持Hugging Face模型部署。开发者可在Foundry Managed Compute上一键部署Hugging Face开源模型，享受企业级算力、安全与运维支持。此举进一步加深微软与Hugging Face的合作，降低开源大模型在企业场景中的落地门槛，推动开放生态与云服务融合。",
       "url": "https://huggingface.co/blog/microsoft/foundry-managed-compute",
-      "image_url": "",
+      "image_url": "images/placeholder-hot2.png",
       "usage_note": "Azure企业客户可在Foundry Managed Compute一键拉起HF开源模型，享受企业级SLA、隔离与运维。"
     },
     {
@@ -45,7 +45,7 @@
       "title": "vLLM原生集成Transformers后端，推理速度接近专用实现",
       "summary": "Hugging Face宣布vLLM推理框架已实现对Transformers建模后端的原生速度支持。通过深度优化，开发者现可直接使用Transformers中定义的模型架构，在vLLM中获得接近专用后端的推理性能。这一进展显著降低了新模型接入高性能推理服务的门槛，使研究者和企业能更快将开源模型部署到生产环境，进一步推动开源大模型生态的普及和落地。",
       "url": "https://huggingface.co/blog/native-speed-vllm-transformers-backend",
-      "image_url": "",
+      "image_url": "images/placeholder-hot4.png",
       "usage_note": "研究者只需在Transformers里定义模型架构，vLLM即可直接高性能推理，新模型上线服务时间大幅缩短。"
     },
     {
@@ -306,7 +306,7 @@
   },
   "date": "2026-07-20",
   "generated_at": "2026-07-20 04:36:37",
-  "issue_number": 3,
+  "issue_number": 4,
   "period_start": "2026年7月6日",
   "period_end": "2026年7月20日",
   "total_sources": 0

@@ -3,7 +3,7 @@
   "overview": {
     "date_start": "2026年7月6日",
     "date_end": "2026年7月22日",
-    "editor": "产品资讯组",
+    "editor": "ai研发组",
     "core_summary": "近两周AI领域国产开源大模型取得标志性突破，月之暗面推出全球首个3万亿参数开源大模型Kimi K3，打破海外顶尖开源模型垄断；大模型落地加速渗透，从智能体手机、智驾合资项目到医疗垂直领域均有里程碑进展；同时企业AI落地暴露安全、成本、对齐等多类问题，行业开始回归理性优化，降本增效与合规治理成为核心共识。",
     "cover_image": "weekly-2026-07-22/images/cover.png"
   },
@@ -345,7 +345,7 @@
   },
   "date": "2026-07-22",
   "generated_at": "2026-07-22 15:19:22",
-  "issue_number": 4,
+  "issue_number": 3,
   "period_start": "2026年7月6日",
   "period_end": "2026年7月22日",
   "total_sources": 0

@@ -376,9 +376,13 @@ def build_export_html(
     grouped = _group_industry_by_date(newsletter)
 
     industry_html = []
+    shown = 0
+    max_items = getattr(cfg, "industry_max_count", 12)
     for date_label, items in grouped.items():
-        industry_html.append(f'<h3 class="date-label">{escape(date_label)}</h3>')
+        date_items = []
         for item in items:
+            if shown >= max_items:
+                break
             img_html = ""
             if item.image_url:
                 src = _image_src_for_html(item.image_url, issue_slug, relative)
@@ -392,22 +396,28 @@ def build_export_html(
                     f'<p class="news-usage"><strong>使用说明：</strong>'
                     f"{escape(item.usage_note.strip())}</p>"
                 )
-            industry_html.append(
+            date_items.append(
                 f'<div class="news-item">'
                 f"{img_html}"
-                f'<p class="news-title">• <strong>{escape(item.title)}</strong></p>'
+                f'<h4 class="news-title">{escape(item.title)}</h4>'
                 f'<p class="news-summary">{escape(item.summary)}</p>'
                 f"{usage_html}"
                 f"</div>"
             )
+            shown += 1
+        if date_items:
+            industry_html.append(f'<h3 class="date-label">🟦 <span style="color:#2159c9ff;">{escape(date_label)}</span></h3>')
+            industry_html.extend(date_items)
+        if shown >= max_items:
+            break
 
     trends_html = []
     tech = newsletter.tech_summary
     if tech:
-        for trend in tech.trends:
+        for idx, trend in enumerate(tech.trends, 1):
             trends_html.append(
                 f'<div class="trend-item">'
-                f"<p class=\"trend-heading\"><strong>{escape(trend.title)}</strong></p>"
+                f'<h4 class="trend-head">{idx}. {escape(trend.title)}</h4>'
                 f'<p class="trend-body">{escape(trend.body)}</p>'
                 f"</div>"
             )
@@ -424,36 +434,44 @@ def build_export_html(
                     f'<p class="feas-summary">{escape(group.summary.strip())}</p>'
                 )
             feasibility_html.append(
-                f'<div class="feas-card">'
-                f'<div class="feas-header">'
-                f'<span class="feas-badge">{idx}</span>'
-                f'<span class="feas-title">{escape(group.title)}</span>'
-                f"</div>"
+                f'<div class="feas-group">'
+                f'<h5 class="feas-head">{idx}. {escape(group.title)}</h5>'
                 f"{summary_html}"
                 f'<ul class="feas-list">{bullets_html}</ul>'
                 f"</div>"
             )
 
-    # ---- 热点资讯（行业动态上方）----
+    # ---- 本周热点（行业动态下方，对照参考图：主题 + Case 配图）----
     hot_items = newsletter.industry_news[:cfg.hot_topics_count]
     hot_html = []
     if hot_items:
         for i, item in enumerate(hot_items, 1):
+            img_field = item.ai_image or item.image_url
+            img_html = ""
+            if img_field:
+                img_src = _image_src_for_html(img_field, issue_slug, relative)
+                img_html = (
+                    f'<img class="hot-card-img" src="{escape(img_src)}" '
+                    f'alt="{escape(item.title)}" loading="lazy">'
+                )
+            desc_html = ""
+            if item.summary:
+                desc_html = f'<p class="hot-topic-desc">{escape(item.summary)}</p>'
             hot_html.append(
-                f'<div class="hot-item">'
-                f'<span class="hot-rank">{i}</span>'
-                f'<div class="hot-content">'
-                f'<p class="hot-title"><strong>{escape(item.title)}</strong></p>'
-                f'<p class="hot-summary">{escape(item.summary)}</p>'
-                f'</div></div>'
+                f'<div class="hot-topic-block">'
+                f'<h4 class="hot-topic">{escape(item.title)}</h4>'
+                f'{desc_html}'
+                f'<h5 class="hot-case">➡️ Case {escape(item.title)}</h5>'
+                f'{img_html}'
+                f'</div>'
             )
 
     tech_block = ""
     if tech:
         tech_block = f"""
 <section>
-  <h2>{cfg.tech_summary_icon} {cfg.tech_summary_label_prefix}：{escape(tech.title_suffix)}</h2>
-  <h3>☀️ 核心趋势</h3>
+  <h2 class="section-title">{cfg.tech_summary_icon} {cfg.tech_summary_label_prefix}：{escape(tech.title_suffix)}</h2>
+  <h3>🌟 核心趋势</h3>
   {''.join(trends_html)}
   <h3>🔮 可行性思考</h3>
   {''.join(feasibility_html)}
@@ -474,7 +492,7 @@ def build_export_html(
     if hot_html:
         hot_section = f"""
 <section>
-  <h2>{cfg.hot_topics.icon} {cfg.hot_topics.label}</h2>
+  <h2 class="section-title">{cfg.hot_topics.icon} {cfg.hot_topics.label}</h2>
   <div class="hot-list">
     {''.join(hot_html)}
   </div>
@@ -499,45 +517,44 @@ def build_export_html(
                    border-radius:8px;}}
   .inner-padding {{padding:32px 28px;}}
   body {{font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
-            color:#222;line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased;}}
-  h1 {{text-align:center;font-size:26px;margin-bottom:6px;color:#111;}}
+            color:#222;line-height:1.8;font-size:16px;-webkit-font-smoothing:antialiased;}}
+  h1 {{text-align:center;font-size:28px;margin-bottom:6px;color:#111;}}
   hr {{border:none;border-top:1.5px solid #333;margin:16px auto 24px;width:100%;}}
-  .cover-image {{width:100%;border-radius:10px;margin:16px 0 22px;display:block;}}
-  h2 {{font-size:17px;margin-top:28px;color:#111;border-left:4px solid #a62c2c;padding-left:10px;}}
-  h3 {{font-size:15px;margin-top:18px;color:#333;}}
-  h3.date-label {{color:#d95030;font-weight:600;font-size:14px;}}
-  .meta p {{margin:6px 0;font-size:14px;color:#444;}}
-  /* 热点资讯 */
-  .hot-list {{margin:12px 0 8px;}}
-  .hot-item {{display:flex;gap:12px;margin-bottom:14px;padding:10px 12px;
-               background:#fff8f0;border-left:3px solid #e6a23c;border-radius:6px;}}
-  .hot-rank {{flex-shrink:0;width:24px;height:24px;line-height:24px;text-align:center;
-              background:#e6a23c;color:#fff;border-radius:50%;font-size:13px;font-weight:bold;}}
-  .hot-content {{flex:1;min-width:0;}}
-  .hot-title {{margin:0 0 4px;font-size:14px;font-weight:600;}}
-  .hot-summary {{margin:0;color:#555;font-size:13px;line-height:1.6;}}
+  .cover-image {{width:85%;border-radius:10px;margin:16px 0 22px;display:block;}}
+  h2 {{font-size:19px;margin-top:28px;color:#111;}}
+  .section-title {{font-size:24px;}}
+  h3 {{font-size:16px;margin-top:18px;color:#333;}}
+  h3.date-label {{color:#2159c9;font-weight:600;font-size:15px;}}
+  .meta p {{margin:6px 0;font-size:15px;color:#444;}}
+  /* 本周热点 - 主题 + Case 配图（对照参考图） */
+  .hot-list {{margin:16px 0 12px;}}
+  .hot-topic-block {{margin-bottom:22px;}}
+  .hot-topic {{margin:18px 0 6px;font-size:18px;font-weight:700;color:#111;}}
+  .hot-topic-desc {{margin:0 0 10px;font-size:15px;color:#444;line-height:1.7;}}
+  .hot-case {{margin:8px 0 6px;font-size:15px;font-weight:600;color:#2159c9;}}
+  .hot-card-img {{width:70%;height:auto;display:block;border-radius:8px;margin:4px 0 18px;}}
   /* 行业动态 */
   .news-item {{margin-bottom:18px;padding-bottom:14px;border-bottom:1px dashed #e0e0e0;}}
   .news-item:last-child {{border-bottom:none;}}
-  .news-image {{max-width:100%;border-radius:8px;margin-bottom:8px;display:block;}}
-  .news-title {{margin-bottom:5px;font-weight:600;font-size:14.5px;}}
-  .news-summary {{margin:0 0 6px 16px;color:#444;font-size:14px;}}
-  .news-usage {{margin:0 0 0 16px;color:#666;font-size:13px;
+  .news-image {{max-width:420px;width:100%;border-radius:8px;margin:6px 0 10px;display:block;}}
+  .news-title {{margin:0 0 4px;font-weight:700;font-size:15.5px;color:#222;}}
+  .news-summary {{margin:0 0 6px 16px;color:#444;font-size:15px;}}
+  .news-usage {{margin:0 0 0 16px;color:#666;font-size:14px;
                  background:#f9f9f9;padding:6px 10px;border-radius:4px;display:inline-block;}}
-  /* 技术总结 - 核心趋势 */
-  .trend-item {{margin-bottom:16px;padding:12px 14px;background:#f8fafc;border-radius:6px;border-left:3px solid #365772;}}
-  .trend-heading {{margin-bottom:5px;font-size:14.5px;color:#1a3c5e;}}
-  .trend-body {{margin:0 0 0 12px;color:#444;font-size:14px;}}
-  /* 可行性思考 - 卡片化 */
-  .feas-card {{margin-bottom:16px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;}}
-  .feas-header {{background:#eef2f7;padding:9px 14px;font-weight:600;font-size:14.5px;color:#1a3c5e;border-bottom:2px solid #365772;}}
-  .feas-summary {{margin:0;padding:9px 14px 0;font-size:13px;color:#5a6b7b;line-height:1.6;font-style:italic;}}
-  .feas-badge {{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;background:#365772;color:#fff;border-radius:50%;font-size:12px;font-weight:bold;margin-right:8px;}}
-  .feas-title {{vertical-align:middle;}}
-  .feas-list {{margin:0;padding:12px 14px 6px;list-style:none;}}
-  .feas-item {{margin-bottom:11px;font-size:14px;line-height:1.6;}}
+  .news-usage {{margin:0 0 0 16px;color:#666;font-size:14px;
+                 background:#f9f9f9;padding:6px 10px;border-radius:4px;display:inline-block;}}
+  /* 技术总结 - 核心趋势（#### 编号） */
+  .trend-item {{margin-bottom:14px;}}
+  .trend-head {{margin:0 0 5px;font-size:16px;font-weight:700;color:#1a3c5e;}}
+  .trend-body {{margin:0;color:#444;font-size:15px;line-height:1.7;}}
+  /* 可行性思考 - 编号列表（##### 编号，对照参考图） */
+  .feas-group {{margin-bottom:16px;}}
+  .feas-head {{margin:0 0 6px;font-size:15.5px;font-weight:700;color:#1a3c5e;}}
+  .feas-summary {{margin:0 0 6px;font-size:14px;color:#5a6b7b;line-height:1.6;font-style:italic;}}
+  .feas-list {{margin:0;padding-left:20px;list-style:disc;}}
+  .feas-item {{margin-bottom:8px;font-size:15px;line-height:1.6;color:#444;}}
   .feas-item:last-child {{margin-bottom:4px;}}
-  .feas-tag {{display:inline-block;background:#e3eef7;color:#365772;font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:top;}}
+  .feas-tag {{display:inline-block;background:#e3eef7;color:#365772;font-size:13px;font-weight:600;padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:top;}}
   .feas-desc {{color:#444;}}
   .feas-plain {{color:#444;}}
   ul {{padding-left:20px;}}
@@ -545,8 +562,9 @@ def build_export_html(
   @media only screen and (max-width:600px) {{
     .content-table {{width:100%!important;max-width:100%!important;border-radius:0;}}
     .inner-padding {{padding:20px 16px!important;}}
-    h1 {{font-size:22px!important;}}
-    h2 {{font-size:16px!important;}}
+    h1 {{font-size:24px!important;}}
+    h2 {{font-size:17px!important;}}
+    .section-title {{font-size:21px!important;}}
   }}
 </style>
 </head>
@@ -558,7 +576,7 @@ def build_export_html(
   <h1>{escape(newsletter.brand_name)}</h1>
   <hr>
   <section>
-    <h2>{cfg.overview.icon} {cfg.overview.label}</h2>
+    <h2 class="section-title">{cfg.overview.icon} {cfg.overview.label}</h2>
     <div class="meta">
       <p><strong>时间范围：</strong>{escape(ov.date_start)} - {escape(ov.date_end)}</p>
       <p><strong>本期编辑：</strong>{escape(ov.editor)}</p>
@@ -566,11 +584,11 @@ def build_export_html(
     </div>
     {cover_html}
   </section>
-  {hot_section}
   <section>
-    <h2>{cfg.industry.icon} {cfg.industry.label}</h2>
+    <h2 class="section-title">{cfg.industry.icon} {cfg.industry.label}</h2>
     {''.join(industry_html)}
   </section>
+  {hot_section}
   {tech_block}
 </td></tr>
 </table>

@@ -32,6 +32,7 @@ class IndustryNewsItem:
     url: str = ""
     image_url: str = ""
     usage_note: str = ""
+    ai_image: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -45,6 +46,7 @@ class IndustryNewsItem:
             url=data.get("url") or "",
             image_url=data.get("image_url") or "",
             usage_note=data.get("usage_note") or "",
+            ai_image=data.get("ai_image") or "",
         )
 
 
