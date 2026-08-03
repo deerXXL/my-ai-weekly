@@ -23,9 +23,14 @@ if [ -f "$STATE" ]; then
   fi
 fi
 
-/home/jinqi/my-ai-weekly/venv/bin/python generate_weekly.py --days 14
-/home/jinqi/my-ai-weekly/venv/bin/python send_md_email.py
-echo "$NOW" > "$STATE"
+# 生成失败则整段中止：不发送、不写 .last_send、不推送（下周一自动重试）
+if /home/jinqi/my-ai-weekly/venv/bin/python generate_weekly.py --days 14; then
+  /home/jinqi/my-ai-weekly/venv/bin/python send_md_email.py
+  echo "$NOW" > "$STATE"
+else
+  echo "$(date) ⚠️ 生成失败（LLM 分析/ARK 异常），跳过发送与推送；下周一将自动重试"
+  exit 1
+fi
 
 # —— 推送到 GitHub，触发 Render 自动重新部署网页（自动更新核心）——
 # 前提：本机已配置 SSH 公钥到 GitHub（见下方部署说明），且 remote 为 SSH 地址。
