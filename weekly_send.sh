@@ -35,8 +35,11 @@ cd /home/jinqi/my-ai-weekly
 export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 git config user.email "bot@ai-weekly.local"
 git config user.name "ai-weekly-bot"
-git add output/ latest.json .latest 2>/dev/null
-git commit -m "Auto update weekly $(date +%Y-%m-%d)" || echo "（无新内容，跳过 commit）"
+# 只暂存「今天这期」+ 指针/状态文件（避免 git add output/ 全量暂存历史图片导致慢/失败）
+ISSUE_DIR="output/weekly-$(date +%Y-%m-%d)"
+echo "$(date) 暂存新一期: $ISSUE_DIR"
+git add "$ISSUE_DIR" latest.json .latest scripts/.last_send scripts/.last_receiver 2>&1
+git commit -m "Auto update weekly $(date +%Y-%m-%d)" 2>&1 || echo "（无新内容，跳过 commit）"
 # 推送到 origin（Render 连此远程即自动重部署）；Laurtiv27 无写权限已移除
 git push origin main 2>&1
 echo "$(date) 推送完成，等待 Render 自动部署"
