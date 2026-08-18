@@ -40,3 +40,4 @@ scripts/.last_receiver
 weekly_email.log
 run.log
 scheduler.log
+scripts/.last_send
