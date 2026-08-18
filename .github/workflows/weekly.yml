@@ -5,12 +5,12 @@ permissions:
   contents: write
 
 on:
-  schedule:
-    # 每两周的周一北京时间上午9点触发一次（与邮件定时同步）
-    # GitHub Actions 使用 UTC，周一 1 点 = 北京时间周一 9 点
-    # 配合下方「Check bi-weekly schedule」步骤：仅在偶数 ISO 周真正生成，奇数周跳过
-    - cron: "0 1 * * 1"
-
+  # 定时触发已停用：2026-08-18 起全量迁移到 Linux 服务器（不依赖 GitHub）。
+  # Linux 端：crontab + weekly_send.sh + systemd ai-weekly-web.service。
+  # 保留 workflow_dispatch 入口，便于手动重放或调试；定时已不再触发。
+  #
+  # schedule:
+  #   - cron: "0 1 * * 1"
   workflow_dispatch:
 
 

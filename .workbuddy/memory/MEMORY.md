@@ -1,5 +1,19 @@
 # 项目长期记忆（闪联AI周刊）
 
+## ⚡ 架构切换（2026-08-18 落地）：Linux 全自动，零 GitHub 依赖
+**结论**：从今天起，AI 周刊整套自动化都在 Linux 上跑，**不再依赖 GitHub Action / Render / git push**。
+- **生成**：cron `weekly_send.sh` 自己跑 `generate_weekly.py`（不再依赖 GitHub Action）
+- **发信**：cron `weekly_send.sh` → `send_md_email.py`（不再 git pull，输出就在本地）
+- **网页**：systemd `ai-weekly-web.service` 常驻 gunicorn `web_server:app`，**局域网可访问**（`0.0.0.0:5000`），不走 Render
+- **WorkBuddy automation**：原「每日 AI 新闻推送」一次性过期条目已删（`2026-08-18`），**所有自动化均在 Linux cron/systemd**
+- **GitHub Action**：`schedule` 已注释（保留 `workflow_dispatch` 仅作历史/手动）；Action 实际被关闭后即可停用 Render
+- 唯一一次 `git push`：本机推改造后代码 → Linux `git pull` 拿；之后不再 push
+**脚本核心**：weekly_send.sh 按 **偶数 ISO 周（`TZ='Asia/Shanghai' date +%V`）**生成；奇数周仅清理不发信。
+**crontab 推荐**：`0 1 * * 1 /bin/bash /home/jinqi/my-ai-weekly/weekly_send.sh >> .../weekly_send.cron.log 2>&1`
+（**单斜杠**！上次 `//bin/bash` bug 让 8-17 没跑）
+**systemd unit**：`deploy/ai-weekly.service` 已改 — `User=jinqi`、`WorkingDirectory=/home/jinqi/my-ai-weekly`、`EnvironmentFile` 同上、`-b 0.0.0.0:5000`。
+**部署路径假设**：`/home/jinqi/my-ai-weekly` + 用户 `jinqi`（脚本里写死了，改路径要同步改 2 个文件）。
+
 ## 路径约定（重要！）
 - 项目根 = `D:\AI2.0`。`config.py` 在项目根，故 `BASE_DIR` 应用 `parents[0]`（不是 parents[1]）。
 - `config.OUTPUT_DIR` 被读路径（`issue_paths` → `export_builder.load_latest_report_dict`、

@@ -4,13 +4,14 @@ After=network.target
 
 [Service]
 Type=simple
-# 改成你的部署用户与项目路径
-User=www-data
-WorkingDirectory=/opt/ai-weekly
+# 用户与路径以实际部署为准（jinqi @ /home/jinqi/my-ai-weekly）
+User=jinqi
+WorkingDirectory=/home/jinqi/my-ai-weekly
 Environment=PYTHONUNBUFFERED=1
-# 把密钥注入进程（推荐用 .env 方式，或在此逐条 Environment=）
-EnvironmentFile=/opt/ai-weekly/.env
-ExecStart=/opt/ai-weekly/venv/bin/gunicorn -w 2 -b 127.0.0.1:5000 web_server:app
+# 密钥通过 .env 注入（ARK_API_KEY / ARK_BASE_URL / ARK_MODEL / SMTP 等）
+EnvironmentFile=/home/jinqi/my-ai-weekly/.env
+# 局域网可访问：直接 -b 0.0.0.0:5000；如需更安全可改 127.0.0.1:5000 + nginx 反代
+ExecStart=/home/jinqi/my-ai-weekly/venv/bin/gunicorn -w 2 -b 0.0.0.0:5000 web_server:app
 Restart=always
 RestartSec=5
 

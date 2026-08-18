@@ -1,13 +1,18 @@
-# 强制项目记忆文件使用 LF 换行符，避免 Windows 上 core.autocrlf 触发 CRLF 转换警告
-.workbuddy/memory/** text eol=lf
-# 本文件自身也使用 LF
-.gitattributes text eol=lf
-# 源码统一 LF：weekly_send.sh / retention.py 在远端 Linux 运行，LF 更友好，并消除 CRLF 警告
-*.py text eol=lf
-*.sh text eol=lf
-# 配置/数据/文档统一 LF（output/ 下的 json/html/md 也会被 Git 追踪）
-*.json text eol=lf
-*.md text eol=lf
-*.html text eol=lf
-*.css text eol=lf
-*.js text eol=lf
+# 强制 LF 换行（Linux 上 systemd unit / bash 脚本 / Python 必须 LF，否则解析异常）
+*.sh        text eol=lf
+*.service   text eol=lf
+*.py        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+
+# 图片/二进制：明确标 binary，禁止任何换行转换
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.woff*     binary
