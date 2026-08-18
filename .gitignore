@@ -41,3 +41,4 @@ weekly_email.log
 run.log
 scheduler.log
 scripts/.last_send
+output/
