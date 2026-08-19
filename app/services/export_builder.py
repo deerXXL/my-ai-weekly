@@ -231,12 +231,18 @@ def _image_src_for_html(
     image_url: str,
     issue_slug: str,
     relative: bool = False,
+    *,
+    images_dir=None,
 ) -> str:
     """本地图片地址。
 
     - relative=False（网页/服务器预览）：用 /issues/{issue_slug}/images/... 供 Flask 静态路由
     - relative=True（导出 ZIP 内离线查看）：统一为相对路径 images/...，脱离服务器也能显示
+
+    images_dir（可选）：传入磁盘绝对路径后，会校验文件名扩展名是否真实存在，
+    并在扩展名不一致时自动纠正（如字段写 .png、磁盘是 .jpg）。
     """
+    from pathlib import Path as _P
     if not image_url:
         return ""
     if image_url.startswith("http://") or image_url.startswith("https://"):
@@ -245,6 +251,13 @@ def _image_src_for_html(
     rel = image_url.lstrip("/")
     if rel.startswith("weekly-"):
         rel = "/".join(rel.split("/")[1:])
+    # 容错：磁盘实际扩展名可能与字段记录的不一致
+    if images_dir is not None and rel.startswith("images/"):
+        stem = _P(rel).stem
+        for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
+            if (images_dir / f"{stem}{ext}").exists():
+                rel = f"images/{stem}{ext}"
+                break
     if relative:
         return rel
     if rel.startswith("images/"):
@@ -375,6 +388,15 @@ def build_export_html(
     issue_slug = _issue_slug(newsletter)
     grouped = _group_industry_by_date(newsletter)
 
+    # 容错：当字段记录的扩展名与磁盘真实文件不一致时，自动纠正 HTML src
+    images_dir = None
+    try:
+        images_dir = _REPORT_OUTPUT_DIR / issue_slug / "images"
+        if not images_dir.exists():
+            images_dir = None
+    except Exception:
+        images_dir = None
+
     industry_html = []
     shown = 0
     max_items = getattr(cfg, "industry_max_count", 12)
@@ -385,7 +407,7 @@ def build_export_html(
                 break
             img_html = ""
             if item.image_url:
-                src = _image_src_for_html(item.image_url, issue_slug, relative)
+                src = _image_src_for_html(item.image_url, issue_slug, relative, images_dir=images_dir)
                 img_html = (
                     f'<img class="news-image" src="{escape(src)}" '
                     f'alt="{escape(item.title)}" loading="lazy">'
@@ -449,7 +471,7 @@ def build_export_html(
             img_field = item.ai_image or item.image_url
             img_html = ""
             if img_field:
-                img_src = _image_src_for_html(img_field, issue_slug, relative)
+                img_src = _image_src_for_html(img_field, issue_slug, relative, images_dir=images_dir)
                 img_html = (
                     f'<img class="hot-card-img" src="{escape(img_src)}" '
                     f'alt="{escape(item.title)}" loading="lazy">'
@@ -480,7 +502,7 @@ def build_export_html(
 
     cover_html = ""
     if ov.cover_image:
-        src = _image_src_for_html(ov.cover_image, issue_slug, relative)
+        src = _image_src_for_html(ov.cover_image, issue_slug, relative, images_dir=images_dir)
         cover_html = (
             f'<img class="cover-image" src="{escape(src)}" '
             f'alt="{escape(newsletter.brand_name)}封面">'

@@ -95,6 +95,23 @@ def _src_to_filename(src: str) -> str:
     return Path(src).name
 
 
+_IMG_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+
+
+def _resolve_existing_image(images_dir: Path, stem: str) -> Path | None:
+    """在 images_dir 里查找 stem.{png,jpg,jpeg,webp,gif} 真实存在的文件。
+
+    容错场景：newsletter.json 里 image_url 记录的扩展名（如 .png）
+    和磁盘上下载下来的实际扩展名（如 .jpg）不一致，
+    这是 image_storage._guess_extension 在某些服务器上推错扩展名导致的。
+    """
+    for ext in _IMG_EXTENSIONS:
+        candidate = images_dir / f"{stem}{ext}"
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def prepare_html_and_images(html: str, images_dir: Path) -> tuple[str, list[tuple[str, Path]]]:
     """解析 HTML，收集需要嵌入的图片，并将 src 替换为 CID 引用。
 
@@ -112,9 +129,14 @@ def prepare_html_and_images(html: str, images_dir: Path) -> tuple[str, list[tupl
 
         filename = _src_to_filename(src)
         full_path = images_dir / filename
+        # 容错：扩展名不一致时自动寻找磁盘真实文件（见 _resolve_existing_image）
         if not full_path.exists():
-            print(f"[WARN] 图片不存在，跳过: {full_path}")
-            continue
+            stem = Path(filename).stem
+            resolved = _resolve_existing_image(images_dir, stem)
+            if resolved is None:
+                print(f"[WARN] 图片不存在，跳过: {full_path}")
+                continue
+            full_path = resolved
 
         cid = f"img{cid_counter}"
         cid_counter += 1

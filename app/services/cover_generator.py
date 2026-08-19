@@ -45,6 +45,14 @@ def _trends_text(newsletter: WeeklyNewsletter) -> str:
     return "\n".join(lines)
 
 
+# 常见易触发 Seedream 内容审核的词汇，生成封面提示词时尽量规避
+_SENSITIVE_HINTS = (
+    "禁止使用任何真实人物姓名、企业全名、政治人物、军事、医疗诊断、"
+    "社会事件等具体名词；用抽象的『AI 行业』『算力』『大模型』『智能体』等"
+    "中性行业概念与纯视觉元素描述，避免任何可能触发内容审核的措辞。"
+)
+
+
 def _build_image_prompt(newsletter: WeeklyNewsletter) -> str:
     from app.services.llm_signal import call_llm
 
@@ -59,10 +67,24 @@ def _build_image_prompt(newsletter: WeeklyNewsletter) -> str:
     )
     result = call_llm(
         prompt,
-        system="你是专业 AI 视觉提示词工程师。只输出可直接用于文生图的提示词正文，不要任何前缀后缀。",
+        system=(
+            "你是专业 AI 视觉提示词工程师。只输出可直接用于文生图的提示词正文，"
+            "不要任何前缀后缀。" + _SENSITIVE_HINTS
+        ),
         max_tokens=1200,
     )
     return result.strip().strip('"').strip("'")
+
+
+def _build_safe_prompt(newsletter: WeeklyNewsletter) -> str:
+    """兜底提示词：完全不含具体新闻内容，只保留品牌/日期/风格，几乎不会触发审核。"""
+    ov = newsletter.overview
+    return (
+        f"一张 16:9 横版科技资讯周刊封面，科技蓝白配色，3D 质感，专业企业级风格。"
+        f"中央立体标题「{newsletter.brand_name}」，下方日期「{ov.date_start} - {ov.date_end}」，"
+        f"置于蓝色阶梯底座上。左侧半透明面板标题『本期聚焦』，右侧 2×2 圆角卡片网格，"
+        f"底部横向信息条『AI 技术落地趋势』。画面简洁有设计感，无文字正文、无水印、无人脸。"
+    )
 
 
 def _generate_image_url(prompt: str, size: str = "2560x1440") -> str:
@@ -105,7 +127,12 @@ def generate_cover(newsletter: WeeklyNewsletter, issue_dir: Path) -> str:
         print("  [cover] 生成提示词...")
         prompt = _build_image_prompt(newsletter)
         print(f"  [cover] 调用 Seedream ({ARK_IMAGE_MODEL})...")
-        image_url = _generate_image_url(prompt)
+        try:
+            image_url = _generate_image_url(prompt)
+        except Exception as first_exc:
+            # 首次可能因提示词触发内容审核失败，改用纯视觉兜底提示词重试一次
+            print(f"  [cover] 首次生成失败（{first_exc}），改用兜底提示词重试…")
+            image_url = _generate_image_url(_build_safe_prompt(newsletter))
         _download_to(dest, image_url)
         kb = dest.stat().st_size // 1024
         print(f"  [cover] {issue_dir.name}/{COVER_REL_PATH} ({kb}KB)")
